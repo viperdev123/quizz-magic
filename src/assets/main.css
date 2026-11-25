@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { font-family: 'Noto Sans Thai Variable', system-ui, sans-serif; }
+  body { @apply bg-cream text-ink antialiased; }
+  :focus-visible { @apply outline-none ring-4 ring-primary/40 ring-offset-2; }
+}
+
+@layer components {
+  .field {
+    @apply min-h-tap w-full rounded-field border border-line bg-white px-4 py-2 text-base text-ink
+      placeholder:text-ink-soft/70 focus:border-primary;
+  }
+  .btn {
+    @apply inline-flex min-h-tap min-w-tap items-center justify-center gap-2 rounded-field px-6 py-2
+      text-base font-semibold transition active:translate-y-px disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-primary text-white hover:bg-primary-dark; }
+  .btn-outline { @apply btn border border-line bg-white text-ink hover:bg-panel; }
+  .badge { @apply inline-flex items-center rounded-field px-3 py-1 text-sm font-semibold; }
+}
