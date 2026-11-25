@@ -39,7 +39,7 @@ function goNext() {
   }
 }
 
-async function onSave(payload: { marks: boolean[]; comments: string[]; note: string }, next: boolean) {
+async function onSave(payload: { typeOk: boolean[]; reasonOk: boolean[]; comments: string[]; note: string }, next: boolean) {
   if (!selected.value) return
   saving.value = true
   saveError.value = ''

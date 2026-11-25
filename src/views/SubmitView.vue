@@ -2,14 +2,14 @@
 import { computed, reactive, ref } from 'vue'
 import DiceMagic from '@/components/DiceMagic.vue'
 import DigitBoxes from '@/components/DigitBoxes.vue'
+import ScoreResultView from '@/components/ScoreResultView.vue'
 import SeatFields from '@/components/SeatFields.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { TURNSTILE_ENABLED } from '@/lib/config'
 import WordCard from '@/components/WordCard.vue'
 import { submitWorksheet } from '@/lib/api'
 import { MESSAGES } from '@shared/constants'
-import { toThaiDigits } from '@shared/drawn'
-import { SubmitReqSchema } from '@shared/schemas'
+import { SubmitReqSchema, type GradedScore } from '@shared/schemas'
 
 const blankWords = () => Array.from({ length: 4 }, () => ({ word: '', reason: '' }))
 
@@ -26,7 +26,7 @@ const turnstile = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const showInvalid = ref(false)
 const sending = ref(false)
 const serverError = ref('')
-const done = ref<{ name: string; level: string; room: string; studentNo: string; digits: string[] } | null>(null)
+const result = ref<GradedScore | null>(null) // set once the work is submitted and graded
 
 const emptyField = computed(
   () =>
@@ -62,13 +62,8 @@ async function submit() {
   sending.value = false
   turnstile.value?.reset() // tokens are single-use
   if (res.ok) {
-    done.value = {
-      name: form.name.trim(),
-      level: form.level,
-      room: form.room,
-      studentNo: form.studentNo,
-      digits: [...form.digits],
-    }
+    result.value = res.result
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   } else {
     serverError.value = res.message
   }
@@ -76,22 +71,16 @@ async function submit() {
 </script>
 
 <template>
-  <!-- success -->
-  <section
-    v-if="done"
-    class="mx-auto mt-6 max-w-xl rounded-card bg-tint-green px-6 py-10 text-center"
-    role="status"
-  >
-    <div class="mb-6 flex items-center justify-center gap-6 text-primary" aria-hidden="true">
-      <span class="text-5xl">✦</span><span class="text-6xl">★</span><span class="text-5xl">✦</span>
+  <!-- submitted: the score is shown straight away -->
+  <section v-if="result" aria-live="polite" class="space-y-6">
+    <div class="rounded-card bg-tint-green px-6 py-8 text-center" role="status">
+      <div class="mb-4 flex items-center justify-center gap-6 text-primary" aria-hidden="true">
+        <span class="text-4xl">✦</span><span class="text-5xl">★</span><span class="text-4xl">✦</span>
+      </div>
+      <h1 class="text-3xl font-extrabold text-ok sm:text-4xl">ส่งคำตอบเรียบร้อย!</h1>
+      <p class="mt-3 text-lg">นี่คือคะแนนของคุณ ส่งงานแล้วส่งใหม่ไม่ได้นะ</p>
     </div>
-    <h1 class="text-3xl font-extrabold text-ok sm:text-4xl">ส่งคำตอบเรียบร้อย!</h1>
-    <p class="mt-4 text-lg">รอครูตรวจแล้วมาดูคะแนนได้เลย</p>
-    <p class="mt-4 text-ink-soft">
-      {{ done.name }} • {{ done.level }}/{{ done.room }} • เลขที่ {{ done.studentNo }}
-    </p>
-    <p class="mt-3 font-bold text-ok">ส่งแล้ว 4 คำ · เลขที่ได้ {{ toThaiDigits(done.digits.join(' ')) }}</p>
-    <RouterLink to="/score" class="btn-primary mt-6 w-full sm:w-auto">ดูคะแนน</RouterLink>
+    <ScoreResultView :result="result" />
   </section>
 
   <!-- form -->

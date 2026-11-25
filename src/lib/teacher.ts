@@ -3,11 +3,14 @@ import { normalizeName } from '@shared/normalize'
 import { thaiCollator } from './format'
 
 export interface GradeRow {
-  marks: boolean[]
+  type_ok: boolean[]
+  reason_ok: boolean[]
   comments: string[]
   note: string | null
-  total: number
+  total: number // 0 - 4 in half points
   graded_at: string
+  /** null = graded automatically by the server; set = last saved by this teacher */
+  graded_by: string | null
 }
 export interface SubmissionRow {
   id: string

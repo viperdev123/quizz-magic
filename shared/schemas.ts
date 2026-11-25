@@ -35,28 +35,33 @@ export type ScoreReq = z.infer<typeof ScoreReqSchema>
 
 export type ApiErrorCode = 'INVALID' | 'LOCKED' | 'MISMATCH' | 'TURNSTILE' | 'RATE_LIMITED' | 'ERROR'
 
-export type SubmitRes = { ok: true } | { ok: false; code: ApiErrorCode; message: string }
-
+/** One word's result. points = 0.5 (typeOk) + 0.5 (reasonOk). */
 export interface ScoreItem {
   digit: number
   drawnNoun: string
   word: string
   reason: string
-  correct: boolean
+  typeOk: boolean
+  reasonOk: boolean
+  points: number // 0, 0.5 or 1
   comment: string | null
+}
+export interface GradedScore {
+  status: 'graded'
+  name: string
+  level: string
+  room: number
+  studentNo: number
+  submittedAt: string
+  total: number // 0 - 4, in steps of 0.5
+  note: string | null
+  items: [ScoreItem, ScoreItem, ScoreItem, ScoreItem]
 }
 export type ScoreRes =
   | { status: 'not_found' }
   | { status: 'waiting'; name: string; level: string; room: number; studentNo: number; submittedAt: string }
-  | {
-      status: 'graded'
-      name: string
-      level: string
-      room: number
-      studentNo: number
-      submittedAt: string
-      total: number
-      note: string | null
-      items: [ScoreItem, ScoreItem, ScoreItem, ScoreItem]
-    }
+  | GradedScore
 export type ScoreErrorRes = { ok: false; code: ApiErrorCode; message: string }
+
+/** Submitting grades the work on the spot, so the answer carries the score. */
+export type SubmitRes = { ok: true; result: GradedScore } | { ok: false; code: ApiErrorCode; message: string }

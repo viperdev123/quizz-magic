@@ -64,7 +64,7 @@ beforeAll(async () => {
   const b = await admin.from('submissions').insert(sub(SEATS.b)).select('id').single()
   idA = (a.data as { id: string }).id
   idB = (b.data as { id: string }).id
-  await admin.from('grades').insert({ submission_id: idA, marks: [true, true, true, true], comments: ['', '', '', ''] })
+  await admin.from('grades').insert({ submission_id: idA, type_ok: [true, true, true, true], reason_ok: [true, true, true, true], comments: ['', '', '', ''] })
 
   clients.anon = createClient(env.url, env.anonKey, opts)
   const student = await tempUser(false)
@@ -89,7 +89,7 @@ for (const role of ['anon', 'signed-in non-teacher']) {
     it('INSERT is rejected on all tables', async () => {
       const c = clients[role]!
       expect((await c.from('submissions').insert(sub(NEW_SEAT))).error, 'submissions').not.toBeNull()
-      expect((await c.from('grades').insert({ submission_id: idB, marks: [true, true, true, true], comments: ['', '', '', ''] })).error, 'grades').not.toBeNull()
+      expect((await c.from('grades').insert({ submission_id: idB, type_ok: [true, true, true, true], reason_ok: [true, true, true, true], comments: ['', '', '', ''] })).error, 'grades').not.toBeNull()
       expect((await c.from('teachers').insert({ user_id: randomUUID() })).error, 'teachers').not.toBeNull()
     })
 
@@ -98,7 +98,7 @@ for (const role of ['anon', 'signed-in non-teacher']) {
       const before = await snapshot()
       await c.from('submissions').update({ student_name: 'hacked' }).eq('id', idA)
       await c.from('submissions').update({ student_name: 'hacked' }).neq('id', randomUUID())
-      await c.from('grades').update({ marks: [false, false, false, false] }).eq('submission_id', idA)
+      await c.from('grades').update({ type_ok: [false, false, false, false], reason_ok: [false, false, false, false] }).eq('submission_id', idA)
       await c.from('teachers').update({ created_at: '2000-01-01' }).eq('user_id', teacherId)
       await c.from('grades').delete().eq('submission_id', idA)
       await c.from('submissions').delete().eq('id', idA)
@@ -111,6 +111,7 @@ for (const role of ['anon', 'signed-in non-teacher']) {
       const rpc = await c.rpc('submit_worksheet', {
         p_level: 'ป.1', p_room: 30, p_student_no: 96, p_name: 'x', p_name_norm: 'x',
         p_digits: [1, 2, 3, 4], p_nouns: ['a', 'b', 'c', 'd'], p_words: WORDS,
+        p_type_ok: [true, true, true, true], p_reason_ok: [true, true, true, true], p_comments: ['', '', '', ''], p_note: null,
       })
       expect(rpc.error).not.toBeNull()
       expect((await c.rpc('is_teacher')).data ?? false).toBe(false)

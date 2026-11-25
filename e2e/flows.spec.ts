@@ -15,6 +15,15 @@ test.afterAll(async () => {
   if (t) await teardown(t)
 })
 
+// Digits 2 5 7 9 -> สุนทรภู่ (วิสามานยนาม), เชียงใหม่ (วิสามานยนาม), รถคันที่สาม (ลักษณนาม), อกร่อง (สามานยนาม).
+// The last answer is deliberately wrong (a proper-noun answer for a common noun): 1 + 1 + 1 + 0 = 3.
+const ANSWERS = [
+  ['วิสามานยนาม', 'เป็นชื่อเฉพาะของบุคคล'],
+  ['วิสามานยนาม', 'เป็นชื่อจังหวัด'],
+  ['ลักษณนาม', 'คำว่าคันใช้นับรถ'],
+  ['วิสามานยนาม', 'เป็นชื่อเฉพาะ'],
+] as const
+
 async function waitForTurnstile(page: Page) {
   // Cloudflare's test site key solves itself; the widget writes the token into a hidden input.
   await expect(page.locator('input[name="cf-turnstile-response"]')).toHaveValue(/.+/, { timeout: 45_000 })
@@ -31,13 +40,12 @@ async function submitWorksheet(page: Page) {
   // type the four digits: each box moves on to the next by itself
   await page.getByLabel(/^เลขที่ได้ ช่องที่/).first().click()
   await page.keyboard.type('2579')
-  // the fixed words appear by themselves under the digits 2 5 7 9
+  // the fixed words appear by themselves under the digits
   for (const w of ['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง']) await expect(page.getByText(w).first()).toBeVisible()
   // the student's own work: the noun type and the reason for each word
-  const types = ['วิสามานยนาม', 'วิสามานยนาม', 'ลักษณนาม', 'สามานยนาม']
   for (let i = 0; i < 4; i++) {
-    await page.getByLabel(`คำที่ ${i + 1} :`, { exact: true }).fill(types[i]!)
-    await page.getByPlaceholder('เพราะว่า...').nth(i).fill('เหตุผลทดสอบ')
+    await page.getByLabel(`คำที่ ${i + 1} :`, { exact: true }).fill(ANSWERS[i]![0])
+    await page.getByPlaceholder('เพราะว่า...').nth(i).fill(ANSWERS[i]![1])
   }
   await waitForTurnstile(page)
   await page.getByRole('button', { name: /ส่งคำตอบ/ }).click()
@@ -56,63 +64,61 @@ async function lookupScore(page: Page) {
   await page.getByRole('button', { name: 'ดูคะแนน', exact: true }).click()
 }
 
-test('flow 1: student submits a worksheet', async ({ page }) => {
+test('flow 1: the student submits and sees the score straight away', async ({ page }) => {
   await submitWorksheet(page)
   await expect(page.getByRole('heading', { name: 'ส่งคำตอบเรียบร้อย!' })).toBeVisible()
-  await expect(page.getByText('ส่งแล้ว 4 คำ · เลขที่ได้ ๒ ๕ ๗ ๙')).toBeVisible()
-  const { data } = await t.admin.from('submissions').select('student_name, digits, drawn_nouns').match(SEAT).single()
-  const row = data as { student_name: string; digits: number[]; drawn_nouns: string[] }
+  await expect(page.getByText('3 / 4')).toBeVisible()
+  await expect(page.getByText('เยี่ยมมาก! เรียนรู้ต่อไปนะ')).toBeVisible()
+  // the wrong answer (word 4) is marked and the key is shown: it is the only attempt
+  await expect(page.getByText(/ชนิดที่ถูกคือ สามานยนาม/)).toBeVisible()
+  await expect(page.getByText('✓ ชนิดคำนาม (0.5)').first()).toBeVisible()
+  await expect(page.getByText('✗ ชนิดคำนาม (0.5)')).toBeVisible()
+
+  const sub = await t.admin.from('submissions').select('id, student_name, digits, drawn_nouns').match(SEAT).single()
+  const row = sub.data as { id: string; student_name: string; digits: number[]; drawn_nouns: string[] }
   expect(row.student_name).toBe(NAME)
   expect(row.digits).toEqual([2, 5, 7, 9])
   expect(row.drawn_nouns).toEqual(['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง']) // derived by the server from the digits
+  const g = await t.admin.from('grades').select('total, type_ok, reason_ok, graded_by').eq('submission_id', row.id).single()
+  expect(Number((g.data as { total: number }).total)).toBe(3)
+  expect((g.data as { type_ok: boolean[] }).type_ok).toEqual([true, true, true, false])
+  expect((g.data as { graded_by: string | null }).graded_by).toBeNull() // graded by the server, not a teacher
 })
 
-test('student sees "waiting for teacher" before grading', async ({ page }) => {
-  await lookupScore(page)
-  await expect(page.getByRole('heading', { name: 'รอครูตรวจ' })).toBeVisible()
-  await expect(page.getByText(NAME)).toBeVisible()
+test('one attempt only: submitting again is refused and the score stands', async ({ page }) => {
+  await submitWorksheet(page)
+  await expect(page.getByText('ส่งงานนี้ไปแล้ว ส่งซ้ำไม่ได้')).toBeVisible()
+  const sub = await t.admin.from('submissions').select('id').match(SEAT).single()
+  const g = await t.admin.from('grades').select('total').eq('submission_id', (sub.data as { id: string }).id).single()
+  expect(Number((g.data as { total: number }).total)).toBe(3)
 })
 
-test('flow 2: teacher grades the work (all four marks required)', async ({ page }) => {
+test('flow 2: the teacher sees the automatic grade and can correct a half point', async ({ page }) => {
   await loginTeacher(page)
   await page.getByLabel('ค้นหาชื่อหรือเลขที่').fill('อีทูอี')
   await page.getByRole('button', { name: new RegExp(NAME) }).click()
+  await expect(page.getByText(/ตรวจอัตโนมัติ\s+3\/4/)).toBeVisible()
 
-  // saving without choosing is blocked
-  await page.getByRole('button', { name: 'บันทึกคะแนน', exact: true }).click()
-  await expect(page.getByText('เลือก ถูก หรือ ไม่ถูก ให้ครบทั้ง 4 คำก่อนบันทึกนะ')).toBeVisible()
-
-  for (const n of [1, 2, 3]) {
-    await page.getByRole('radiogroup', { name: `ผลตรวจคำที่ ${n}` }).getByRole('radio', { name: /ถูก \(1\)/ }).click()
-  }
-  await page.getByRole('radiogroup', { name: 'ผลตรวจคำที่ 4' }).getByRole('radio', { name: /ไม่ถูก/ }).click()
-  await page.getByLabel('ความเห็นของคำที่ 4').fill('ลองอีกนิดนะ')
-  await page.getByPlaceholder('ความเห็นรวมถึงนักเรียน (ไม่บังคับ)').fill('เก่งมาก')
-  await page.screenshot({ path: 'test-results/screens/teacher-grading.png', fullPage: true })
+  // word 4: the teacher decides the noun type was acceptable after all -> +0.5
+  await page.getByRole('radiogroup', { name: 'ชนิดคำนามของคำที่ 4' }).getByRole('radio', { name: /ถูก \(0\.5\)/ }).first().click()
+  await page.getByLabel('ความเห็นของคำที่ 4').fill('ครูปรับให้ครึ่งคะแนน')
   await page.getByRole('button', { name: 'บันทึกคะแนน', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'บันทึกคะแนนเรียบร้อย' })).toBeVisible()
 
   const sub = await t.admin.from('submissions').select('id').match(SEAT).single()
-  const { data } = await t.admin.from('grades').select('total, marks').eq('submission_id', (sub.data as { id: string }).id).single()
-  expect((data as { total: number }).total).toBe(3)
-  expect((data as { marks: boolean[] }).marks).toEqual([true, true, true, false])
+  const g = await t.admin.from('grades').select('total, graded_by').eq('submission_id', (sub.data as { id: string }).id).single()
+  expect(Number((g.data as { total: number }).total)).toBe(3.5)
+  expect((g.data as { graded_by: string | null }).graded_by).toBe(t.userId) // now marked as changed by this teacher
 })
 
-test('flow 3: student checks the score', async ({ page }) => {
+test('flow 3: the student looks the score up later and sees the teacher correction', async ({ page }) => {
   await lookupScore(page)
-  await expect(page.getByText('3 / 4')).toBeVisible()
-  await expect(page.getByText('เยี่ยมมาก! เรียนรู้ต่อไปนะ')).toBeVisible()
-  await expect(page.getByText('ลองอีกนิดนะ').first()).toBeVisible()
-  await expect(page.getByText('เก่งมาก')).toBeVisible()
+  await expect(page.getByText('3.5 / 4')).toBeVisible()
+  await expect(page.getByText('ครูปรับให้ครึ่งคะแนน')).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/score-graded.png', fullPage: true })
 })
 
-test('after grading, resubmitting is locked (rule 2)', async ({ page }) => {
-  await submitWorksheet(page)
-  await expect(page.getByText('ครูตรวจงานของคุณแล้ว จึงส่งใหม่ไม่ได้')).toBeVisible()
-})
-
-test('teacher exports a CSV that Excel can open (BOM) with student data', async ({ page }) => {
+test('teacher exports a CSV that Excel can open (BOM) with the half-point score', async ({ page }) => {
   await loginTeacher(page)
   const [download] = await Promise.all([
     page.waitForEvent('download'),
@@ -122,6 +128,7 @@ test('teacher exports a CSV that Excel can open (BOM) with student data', async 
   expect(text.charCodeAt(0)).toBe(0xfeff)
   expect(text).toContain('ชั้น,เลขที่,ชื่อ,เลขที่ได้,คำนามที่สุ่มได้,คำ1,คำ2,คำ3,คำ4,คะแนน,ความเห็นรวม')
   expect(text).toContain(NAME)
+  expect(text).toMatch(/,3\.5,/)
 })
 
 test.describe('accessibility (axe, WCAG 2.x A/AA)', () => {
@@ -137,12 +144,12 @@ test.describe('accessibility (axe, WCAG 2.x A/AA)', () => {
       expect(await scan(page), path).toEqual([])
     }
   })
-  test('teacher page', async ({ page }) => {
-    // self-sufficient: make sure the seat has a submission even when this test runs alone ('locked' is fine)
-    await t.admin.rpc('submit_worksheet', {
-      p_level: SEAT.level, p_room: SEAT.room, p_student_no: SEAT.student_no, p_name: NAME, p_name_norm: NAME,
-      p_digits: [2, 5, 7, 9], p_nouns: ['a', 'b', 'c', 'd'], p_words: [1, 2, 3, 4].map((n) => ({ word: `w${n}`, reason: `r${n}` })),
-    })
+  test('the score result (half stars, per-half chips, advice boxes)', async ({ page }) => {
+    await lookupScore(page)
+    await expect(page.getByText('3.5 / 4')).toBeVisible()
+    expect(await scan(page)).toEqual([])
+  })
+  test('teacher page with a graded student open', async ({ page }) => {
     await loginTeacher(page)
     await page.getByRole('button', { name: new RegExp(NAME) }).click()
     expect(await scan(page)).toEqual([])

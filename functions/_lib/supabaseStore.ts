@@ -16,6 +16,10 @@ export function createStores(url: string, serviceKey: string): { submit: SubmitS
         p_digits: a.digits,
         p_nouns: a.drawnNouns,
         p_words: a.words,
+        p_type_ok: a.typeOk,
+        p_reason_ok: a.reasonOk,
+        p_comments: a.comments,
+        p_note: a.note,
       })
       if (error) throw new Error('db')
       if (data === 'ok' || data === 'locked' || data === 'mismatch') return data
@@ -28,7 +32,7 @@ export function createStores(url: string, serviceKey: string): { submit: SubmitS
       const { data, error } = await sb
         .from('submissions')
         .select(
-          'student_name, level, room, student_no, submitted_at, digits, drawn_nouns, words, grades(marks, comments, note, total)',
+          'student_name, level, room, student_no, submitted_at, digits, drawn_nouns, words, grades(type_ok, reason_ok, comments, note, total)',
         )
         .eq('level', level)
         .eq('room', room)

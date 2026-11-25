@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import SeatFields from '@/components/SeatFields.vue'
-import StatusBadge from '@/components/StatusBadge.vue'
+import ScoreResultView from '@/components/ScoreResultView.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { TURNSTILE_ENABLED } from '@/lib/config'
-import WordResultCard from '@/components/WordResultCard.vue'
 import { lookupScore } from '@/lib/api'
-import { formatThaiDateTime, scoreMessage } from '@/lib/format'
 import { MESSAGES } from '@shared/constants'
 import { ScoreReqSchema, type ScoreRes } from '@shared/schemas'
 
@@ -100,33 +98,7 @@ async function search() {
       </div>
 
       <!-- graded -->
-      <div v-else-if="result?.status === 'graded'" class="grid gap-6 lg:grid-cols-[1fr_2fr]">
-        <div class="space-y-4">
-          <div class="rounded-card bg-tint-yellow px-6 py-8 text-center">
-            <p class="text-3xl tracking-widest text-star" :aria-label="`ได้ ${result.total} จาก 4 ดาว`">
-              <span v-for="n in 4" :key="n" aria-hidden="true">{{ n <= result.total ? '★' : '☆' }}</span>
-            </p>
-            <p class="mt-3 text-6xl font-extrabold">{{ result.total }} / 4</p>
-            <p class="mt-4 font-bold">{{ scoreMessage(result.total) }}</p>
-          </div>
-          <div class="rounded-card bg-white p-5">
-            <StatusBadge status="graded" />
-            <p class="mt-3 text-xl font-bold">{{ result.name }}</p>
-            <p class="text-ink-soft">{{ result.level }}/{{ result.room }} • เลขที่ {{ result.studentNo }}</p>
-            <p class="mt-1 text-ink-soft">ส่งเมื่อ {{ formatThaiDateTime(result.submittedAt) }}</p>
-          </div>
-        </div>
-        <div>
-          <h2 class="mb-4 text-2xl font-extrabold">คำตอบของฉัน</h2>
-          <div class="space-y-4">
-            <WordResultCard v-for="(it, i) in result.items" :key="i" :index="i + 1" :item="it" />
-            <div v-if="result.note" class="rounded-card bg-tint-purple p-5">
-              <p class="text-lg font-bold">✦ ความเห็นจากครู</p>
-              <p class="mt-2">{{ result.note }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ScoreResultView v-else-if="result?.status === 'graded'" :result="result" />
     </div>
   </section>
 </template>

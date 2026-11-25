@@ -13,6 +13,12 @@ import { MESSAGES } from '../shared/constants'
 
 const okGuards: Guards = { rateLimit: async () => true, verifyTurnstile: async () => true }
 
+const perfectWords = [
+  { word: 'วิสามานยนาม', reason: 'เป็นชื่อเฉพาะของบุคคล' }, // 2 สุนทรภู่
+  { word: 'วิสามานยนาม', reason: 'เป็นชื่อจังหวัด' }, // 5 เชียงใหม่
+  { word: 'ลักษณนาม', reason: 'คำว่าคันใช้นับรถ' }, // 7 รถคันที่สาม
+  { word: 'สามานยนาม', reason: 'เป็นชื่อเรียกทั่วไป' }, // 9 อกร่อง
+]
 const submitBody = {
   name: '  พิมพ์ชนก   ใจดี ',
   level: 'ม.1',
@@ -20,26 +26,66 @@ const submitBody = {
   studentNo: 12,
   digits: [2, 5, 7, 9],
   drawnNouns: ['แมว', 'โรงเรียน', 'ดินสอ', 'ความสุข'],
-  words: [
-    { word: 'แมว', reason: 'ใช้เรียกชื่อสัตว์' },
-    { word: 'โรงเรียน', reason: 'ใช้เรียกชื่อสถานที่' },
-    { word: 'ดินสอ', reason: 'ใช้เรียกชื่อสิ่งของ' },
-    { word: 'วิ่ง', reason: 'เป็นการกระทำของคน' },
-  ],
+  words: perfectWords,
   turnstileToken: 'tok',
 }
 
 describe('POST /api/submit', () => {
-  it('stores a valid submission with a normalised name (rule 1, 4)', async () => {
+  it('stores a valid submission with a normalised name (rule 1)', async () => {
     const submit = vi.fn().mockResolvedValue('ok')
     const res = await handleSubmit(submitBody, okGuards, { submit })
-    expect(res).toEqual({ status: 200, body: { ok: true } })
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ ok: true })
     expect(submit.mock.calls[0]![0]).toMatchObject({
       level: 'ม.1',
       room: 2,
       studentNo: 12,
       nameNorm: 'พิมพ์ชนก ใจดี',
     })
+  })
+
+  it('grades on the server and returns the score straight away (0.5 type + 0.5 reason per word)', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    const res = await handleSubmit(submitBody, okGuards, { submit })
+    const result = (res.body as { result: { status: string; total: number; items: { points: number; typeOk: boolean; reasonOk: boolean; drawnNoun: string }[] } }).result
+    expect(result.status).toBe('graded')
+    expect(result.total).toBe(4)
+    expect(result.items.map((i) => i.points)).toEqual([1, 1, 1, 1])
+    expect(result.items.map((i) => i.drawnNoun)).toEqual(['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง'])
+    // the same grade is what gets stored
+    expect(submit.mock.calls[0]![0]).toMatchObject({ typeOk: [true, true, true, true], reasonOk: [true, true, true, true] })
+  })
+
+  it('gives partial credit in half points', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    const words = [
+      { word: 'วิสามานยนาม', reason: 'เพราะรู้จัก' }, // type only: 0.5
+      { word: 'สามานยนาม', reason: 'เป็นชื่อจังหวัด' }, // reason only: 0.5
+      { word: 'ลักษณนาม', reason: 'คำว่าคันใช้นับรถ' }, // 1
+      { word: 'อาการนาม', reason: 'มีคำว่าการนำหน้า' }, // the trap for อกร่อง: 0
+    ]
+    const res = await handleSubmit({ ...submitBody, words }, okGuards, { submit })
+    expect((res.body as { result: { total: number } }).result.total).toBe(2)
+    expect(submit.mock.calls[0]![0]).toMatchObject({
+      typeOk: [true, false, true, false],
+      reasonOk: [false, true, true, false],
+    })
+  })
+
+  it('stores a feedback comment for every word', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    await handleSubmit({ ...submitBody, words: [...perfectWords.slice(0, 3), { word: 'ไม่รู้', reason: 'ไม่รู้' }] }, okGuards, { submit })
+    const { comments } = submit.mock.calls[0]![0] as { comments: string[] }
+    expect(comments).toHaveLength(4)
+    expect(comments[0]).toContain('ถูกต้อง')
+    expect(comments[3]).toContain('สามานยนาม') // after a wrong answer the key is revealed (one attempt only)
+  })
+
+  it('ignores a score or marks sent by the client', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    const words = Array(4).fill({ word: 'ไม่รู้', reason: 'ไม่รู้' })
+    const res = await handleSubmit({ ...submitBody, words, total: 4, typeOk: [true, true, true, true], marks: [true, true, true, true] }, okGuards, { submit })
+    expect((res.body as { result: { total: number } }).result.total).toBe(0)
   })
 
   it('stores the fixed word for each digit and ignores any noun text sent by the client', async () => {
@@ -55,11 +101,19 @@ describe('POST /api/submit', () => {
     expect(res.status).toBe(200)
   })
 
-  it('rejects resubmission after grading with the locked message (rule 2)', async () => {
+  it('a second submission is locked: one attempt only (rule 2)', async () => {
     const store: SubmitStore = { submit: async () => 'locked' }
     const res = await handleSubmit(submitBody, okGuards, store)
     expect(res.status).toBe(409)
     expect(res.body).toEqual({ ok: false, code: 'LOCKED', message: MESSAGES.locked })
+    expect(MESSAGES.locked).toContain('ส่งซ้ำไม่ได้')
+  })
+
+  it('does not reveal a score when the seat is locked or the name does not match', async () => {
+    for (const outcome of ['locked', 'mismatch'] as const) {
+      const res = await handleSubmit(submitBody, okGuards, { submit: async () => outcome })
+      expect(res.body).not.toHaveProperty('result')
+    }
   })
 
   it('rejects a different name on the same seat (rule 3)', async () => {
@@ -109,13 +163,8 @@ const base: StoredSubmission = {
   student_no: 12,
   submitted_at: '2026-11-25T02:42:00Z',
   digits: [2, 5, 7, 9],
-  drawn_nouns: ['แมว', 'โรงเรียน', 'ดินสอ', 'ความสุข'],
-  words: [
-    { word: 'แมว', reason: 'ก' },
-    { word: 'โรงเรียน', reason: 'ข' },
-    { word: 'ดินสอ', reason: 'ค' },
-    { word: 'วิ่ง', reason: 'ง' },
-  ],
+  drawn_nouns: ['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง'],
+  words: perfectWords,
   grade: null,
 }
 const scoreBody = { level: 'ม.1', room: 2, studentNo: 12, turnstileToken: 't' }
@@ -132,27 +181,55 @@ describe('POST /api/score', () => {
     expect(res.status).toBe(200)
   })
 
-  it('returns waiting when not graded, without answers or marks', async () => {
+  it('returns waiting for an old submission that was never graded, without answers or marks', async () => {
     const res = await handleScore(scoreBody, okGuards, storeOf(base))
     expect(res.body).toMatchObject({ status: 'waiting', name: 'พิมพ์ชนก ใจดี' })
     expect(res.body).not.toHaveProperty('items')
   })
 
-  it('returns graded details: total, per-word marks, comments and overall note (rule 6)', async () => {
+  it('returns graded details: total, per-word points for each half, comments and note (rule 6)', async () => {
     const graded: StoredSubmission = {
       ...base,
-      grade: { marks: [true, true, true, false], comments: ['', '', null, 'ลองอีกนิดนะ'], note: 'เก่งมาก', total: 3 },
+      grade: {
+        type_ok: [true, true, true, false],
+        reason_ok: [true, true, false, false],
+        comments: ['', '', null, 'ลองอีกนิดนะ'],
+        note: 'เก่งมาก',
+        total: 2.5,
+      },
     }
     const res = await handleScore(scoreBody, okGuards, storeOf(graded))
-    expect(res.body).toMatchObject({ status: 'graded', total: 3, note: 'เก่งมาก' })
+    expect(res.body).toMatchObject({ status: 'graded', total: 2.5, note: 'เก่งมาก' })
     const items = (res.body as { items: unknown[] }).items
     expect(items).toHaveLength(4)
-    expect(items[3]).toEqual({ digit: 9, drawnNoun: 'ความสุข', word: 'วิ่ง', reason: 'ง', correct: false, comment: 'ลองอีกนิดนะ' })
-    expect(items[0]).toMatchObject({ correct: true, comment: null })
+    expect(items[3]).toEqual({
+      digit: 9, drawnNoun: 'อกร่อง', word: 'สามานยนาม', reason: 'เป็นชื่อเรียกทั่วไป',
+      typeOk: false, reasonOk: false, points: 0, comment: 'ลองอีกนิดนะ',
+    })
+    expect(items[2]).toMatchObject({ typeOk: true, reasonOk: false, points: 0.5, comment: null })
+    expect(items[0]).toMatchObject({ typeOk: true, reasonOk: true, points: 1 })
+  })
+
+  it('shows the same result when looked up later as it did right after submitting', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    const submitted = await handleSubmit(submitBody, okGuards, { submit })
+    const args = submit.mock.calls[0]![0] as { typeOk: boolean[]; reasonOk: boolean[]; comments: string[] }
+    const stored: StoredSubmission = {
+      ...base,
+      grade: { type_ok: args.typeOk, reason_ok: args.reasonOk, comments: args.comments, note: null, total: 4 },
+    }
+    const later = await handleScore(scoreBody, okGuards, storeOf(stored))
+    const a = (submitted.body as { result: { items: unknown; total: number } }).result
+    const b = later.body as { items: unknown; total: number }
+    expect(b.total).toBe(a.total)
+    expect(b.items).toEqual(a.items)
   })
 
   it('exposes only the allowed fields (no ids, no name_norm)', async () => {
-    const graded: StoredSubmission = { ...base, grade: { marks: [true, true, true, true], comments: ['', '', '', ''], note: null, total: 4 } }
+    const graded: StoredSubmission = {
+      ...base,
+      grade: { type_ok: [true, true, true, true], reason_ok: [true, true, true, true], comments: ['', '', '', ''], note: null, total: 4 },
+    }
     const res = await handleScore(scoreBody, okGuards, storeOf({ ...graded, id: 'x', name_norm: 'y' } as StoredSubmission))
     const keys = Object.keys(res.body).sort()
     expect(keys).toEqual(['items', 'level', 'name', 'note', 'room', 'status', 'studentNo', 'submittedAt', 'total'])

@@ -21,11 +21,16 @@ export function formatThaiDateTime(iso: string): string {
 
 export function scoreMessage(total: number): string {
   if (total >= 4) return 'เก่งมาก! ได้เต็มเลย'
-  if (total === 3) return 'เยี่ยมมาก! เรียนรู้ต่อไปนะ'
-  if (total === 2) return 'ดีแล้ว! ลองทบทวนอีกนิดนะ'
-  if (total === 1) return 'สู้ ๆ! ค่อย ๆ เรียนรู้ไปด้วยกันนะ'
+  if (total >= 3) return 'เยี่ยมมาก! เรียนรู้ต่อไปนะ'
+  if (total >= 2) return 'ดีแล้ว! ลองทบทวนอีกนิดนะ'
+  if (total >= 1) return 'สู้ ๆ! ค่อย ๆ เรียนรู้ไปด้วยกันนะ'
   return 'ไม่เป็นไร! เริ่มใหม่ไปด้วยกันนะ'
 }
 
 /** Thai-aware comparison for sorting names */
 export const thaiCollator = new Intl.Collator('th')
+
+/** 3 -> "3", 3.5 -> "3.5" (scores move in half points) */
+export function formatScore(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1)
+}

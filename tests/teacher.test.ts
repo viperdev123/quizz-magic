@@ -9,13 +9,19 @@ import {
   type SubmissionRow,
 } from '../src/lib/teacher'
 
-const grade = (total: number, note: string | null = null): GradeRow => ({
-  marks: [total > 0, total > 1, total > 2, total > 3],
-  comments: ['', '', '', ''],
-  note,
-  total,
-  graded_at: '2026-11-25T03:00:00Z',
-})
+// a total in half points -> the two arrays (half-points are spread over type first, then reason)
+const grade = (total: number, note: string | null = null): GradeRow => {
+  const halves = Math.round(total * 2)
+  return {
+    type_ok: [0, 1, 2, 3].map((i) => i < halves),
+    reason_ok: [0, 1, 2, 3].map((i) => i + 4 < halves),
+    comments: ['', '', '', ''],
+    note,
+    total,
+    graded_at: '2026-11-25T03:00:00Z',
+    graded_by: null,
+  }
+}
 const row = (over: Partial<SubmissionRow> & Pick<SubmissionRow, 'id' | 'student_name'>): SubmissionRow => ({
   level: 'ม.1',
   room: 2,
@@ -45,6 +51,12 @@ const base: Filters = { status: 'all', level: '', room: '', q: '', sort: 'seat' 
 describe('stats', () => {
   it('counts submitted, graded and averages out of 4', () => {
     expect(computeStats(rows)).toEqual({ submitted: 5, graded: 2, average: 3.5 })
+  })
+  it('averages half-point scores to one decimal', () => {
+    const r = [row({ id: 'h1', student_name: 'ก', grades: grade(3.5) }), row({ id: 'h2', student_name: 'ข', grades: grade(2) }), row({ id: 'h3', student_name: 'ค', grades: grade(0.5) })]
+    expect(computeStats(r).average).toBe(2) // (3.5 + 2 + 0.5) / 3
+    expect(computeStats([r[0]!, r[2]!]).average).toBe(2)
+    expect(computeStats([r[0]!]).average).toBe(3.5)
   })
   it('average is null when nothing is graded', () => {
     expect(computeStats([rows[0]!]).average).toBeNull()

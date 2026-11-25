@@ -5,14 +5,14 @@ import { getSupabase } from '@/lib/supabase'
 import { computeStats, type GradeRow, type SubmissionRow } from '@/lib/teacher'
 
 const COLUMNS =
-  'id, level, room, student_no, student_name, digits, drawn_nouns, words, submitted_at, updated_at, grades(marks, comments, note, total, graded_at)'
+  'id, level, room, student_no, student_name, digits, drawn_nouns, words, submitted_at, updated_at, grades(type_ok, reason_ok, comments, note, total, graded_at, graded_by)'
 const POLL_MS = 30_000
 
 type Raw = Omit<SubmissionRow, 'grades'> & { grades: GradeRow | GradeRow[] | null }
-const normalize = (r: Raw): SubmissionRow => ({
-  ...r,
-  grades: Array.isArray(r.grades) ? (r.grades[0] ?? null) : r.grades,
-})
+const normalize = (r: Raw): SubmissionRow => {
+  const g = Array.isArray(r.grades) ? (r.grades[0] ?? null) : r.grades
+  return { ...r, grades: g ? { ...g, total: Number(g.total) } : null } // numeric comes back as a number; be safe
+}
 
 export type SaveResult = 'ok' | 'stale' | 'error'
 
@@ -95,7 +95,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
   async function saveGrade(
     submissionId: string,
     shownUpdatedAt: string,
-    g: { marks: boolean[]; comments: string[]; note: string },
+    g: { typeOk: boolean[]; reasonOk: boolean[]; comments: string[]; note: string },
   ): Promise<SaveResult> {
     const sb = getSupabase()
     const { data: cur, error: ce } = await sb.from('submissions').select('updated_at').eq('id', submissionId).maybeSingle()
@@ -107,7 +107,7 @@ export const useSubmissionsStore = defineStore('submissions', () => {
     const { error: e } = await sb
       .from('grades')
       .upsert(
-        { submission_id: submissionId, marks: g.marks, comments: g.comments, note: g.note.trim() || null },
+        { submission_id: submissionId, type_ok: g.typeOk, reason_ok: g.reasonOk, comments: g.comments, note: g.note.trim() || null },
         { onConflict: 'submission_id' },
       )
     if (e) return 'error'
