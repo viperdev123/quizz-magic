@@ -38,8 +38,8 @@ describe('GradingPanel (teacher override of the automatic grade)', () => {
   it('has a noun-type toggle and a reason toggle for every word', () => {
     const w = mount(GradingPanel, { props: { submission } })
     expect(w.findAll('[role="radiogroup"]')).toHaveLength(8)
-    expect(w.text()).toContain('ชนิดคำนาม (0.5 คะแนน)')
-    expect(w.text()).toContain('เหตุผล (0.5 คะแนน)')
+    expect(w.text()).toContain('ชนิดคำนาม (๐.๕ คะแนน)')
+    expect(w.text()).toContain('เหตุผล (๐.๕ คะแนน)')
   })
 
   it('starts with nothing chosen for an ungraded submission', () => {
@@ -59,9 +59,9 @@ describe('GradingPanel (teacher override of the automatic grade)', () => {
   it('emits both arrays; the total moves in half points', async () => {
     const w = mount(GradingPanel, { props: { submission } })
     await clickAll(w, 0) // everything correct
-    expect(w.text()).toContain('4')
+    expect(w.text()).toContain('๔')
     await toggle(w, 3, 'reason', 1).trigger('click') // last reason wrong -> 3.5
-    expect(w.text()).toContain('3.5')
+    expect(w.text()).toContain('๓.๕')
     await w.find('input[aria-label="ความเห็นของคำที่ 4"]').setValue('ลองอีกครั้งนะ')
     await w.find('input[placeholder^="ความเห็นรวม"]').setValue('เก่งมาก')
     await button(w, 'บันทึกแล้วไปคนถัดไป').trigger('click')
@@ -94,7 +94,7 @@ describe('GradingPanel (teacher override of the automatic grade)', () => {
     expect(toggle(w, 1, 'type', 0).attributes('aria-checked')).toBe('true') // right
     expect((w.find('input[aria-label="ความเห็นของคำที่ 2"]').element as HTMLInputElement).value).toBe('x')
     expect(w.text()).toContain('ตรวจอัตโนมัติ')
-    expect(w.text()).toContain('2.5/4')
+    expect(w.text()).toContain('๒.๕/๔')
   })
 
   it('says when a teacher has already changed the grade', () => {

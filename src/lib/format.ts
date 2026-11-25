@@ -1,3 +1,5 @@
+import { toThaiDigits } from '@shared/drawn'
+
 const TZ = 'Asia/Bangkok'
 
 /** "25 พ.ย. 2569 • 09:42 น." (Buddhist calendar, Bangkok time) */
@@ -16,7 +18,7 @@ export function formatThaiDateTime(iso: string): string {
     hourCycle: 'h23',
     timeZone: TZ,
   }).format(d)
-  return `${date} • ${time} น.`
+  return toThaiDigits(`${date} • ${time} น.`) // Thai numerals, display only
 }
 
 export function scoreMessage(total: number): string {
@@ -32,5 +34,5 @@ export const thaiCollator = new Intl.Collator('th')
 
 /** 3 -> "3", 3.5 -> "3.5" (scores move in half points) */
 export function formatScore(n: number): string {
-  return Number.isInteger(n) ? String(n) : n.toFixed(1)
+  return toThaiDigits(Number.isInteger(n) ? String(n) : n.toFixed(1)) // Thai numerals, display only
 }

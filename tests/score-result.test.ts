@@ -17,10 +17,10 @@ const four = (...over: Partial<ScoreItem>[]) => over.map((o) => item(o))
 
 describe('score formatting', () => {
   it('shows whole scores without a decimal and halves with one', () => {
-    expect(formatScore(4)).toBe('4')
-    expect(formatScore(3.5)).toBe('3.5')
-    expect(formatScore(0.5)).toBe('0.5')
-    expect(formatScore(0)).toBe('0')
+    expect(formatScore(4)).toBe('๔')
+    expect(formatScore(3.5)).toBe('๓.๕')
+    expect(formatScore(0.5)).toBe('๐.๕')
+    expect(formatScore(0)).toBe('๐')
   })
   it('picks the encouragement by range, so half scores are not skipped', () => {
     expect(scoreMessage(4)).toContain('เต็ม')
@@ -44,8 +44,8 @@ describe('ScoreResultView', () => {
 
   it('shows the total in half points', () => {
     const w = mount(ScoreResultView, { props: { result: mixed } })
-    expect(w.text()).toContain('2.5 / 4')
-    expect(w.find('[role="img"]').attributes('aria-label')).toBe('ได้ 2.5 จาก 4 คะแนน')
+    expect(w.text()).toContain('๒.๕ / ๔')
+    expect(w.find('[role="img"]').attributes('aria-label')).toBe('ได้ ๒.๕ จาก ๔ คะแนน')
   })
   it('draws 2 full stars and 1 half star for 2.5', () => {
     const w = mount(ScoreResultView, { props: { result: mixed } })
@@ -56,11 +56,11 @@ describe('ScoreResultView', () => {
   })
   it('marks each half of each word: right, half and wrong are told apart', () => {
     const text = mount(ScoreResultView, { props: { result: mixed } }).text()
-    expect(text).toContain('✓ 1')
-    expect(text).toContain('½ 0.5')
-    expect(text).toContain('✗ 0')
-    expect(text).toContain('ชนิดคำนาม (0.5)')
-    expect(text).toContain('เหตุผล (0.5)')
+    expect(text).toContain('✓ ๑')
+    expect(text).toContain('½ ๐.๕')
+    expect(text).toContain('✗ ๐')
+    expect(text).toContain('ชนิดคำนาม (๐.๕)')
+    expect(text).toContain('เหตุผล (๐.๕)')
   })
   it('shows the advice for every word that has one', () => {
     const text = mount(ScoreResultView, { props: { result: mixed } }).text()

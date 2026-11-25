@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatScore } from '@/lib/format'
 // ถูก (1) / ไม่ถูก (0). null = not chosen yet (all four must be chosen before saving).
 withDefaults(defineProps<{ modelValue: boolean | null; label: string; invalid?: boolean; points?: number }>(), { points: 1 })
 defineEmits<{ 'update:modelValue': [boolean] }>()
@@ -19,7 +20,7 @@ defineEmits<{ 'update:modelValue': [boolean] }>()
       :class="modelValue === true ? 'bg-ok text-white' : 'bg-transparent text-ink-soft hover:bg-panel'"
       @click="$emit('update:modelValue', true)"
     >
-      ✓ ถูก ({{ points }})
+      ✓ ถูก ({{ formatScore(points) }})
     </button>
     <button
       type="button"
@@ -29,7 +30,7 @@ defineEmits<{ 'update:modelValue': [boolean] }>()
       :class="modelValue === false ? 'bg-bad text-white' : 'bg-transparent text-ink-soft hover:bg-panel'"
       @click="$emit('update:modelValue', false)"
     >
-      ✗ ไม่ถูก (0)
+      ✗ ไม่ถูก (๐)
     </button>
   </div>
 </template>

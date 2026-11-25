@@ -56,11 +56,11 @@ function save(goNext: boolean) {
   <section class="rounded-card border border-line/70 bg-white p-5 sm:p-6" :aria-label="`ตรวจงานของ ${submission.student_name}`">
     <StatusBadge :status="submission.grades ? 'graded' : 'waiting'" />
     <h2 class="mt-3 text-2xl font-extrabold">{{ submission.student_name }}</h2>
-    <p class="text-ink-soft">{{ seatLabel(submission) }} • เลขที่ {{ submission.student_no }}</p>
+    <p class="text-ink-soft">{{ toThaiDigits(seatLabel(submission)) }} • เลขที่ {{ toThaiDigits(String(submission.student_no)) }}</p>
     <p class="text-ink-soft">ส่งเมื่อ {{ formatThaiDateTime(submission.submitted_at) }}</p>
     <p v-if="submission.grades" class="mt-2 text-ink-soft">
       {{ submission.grades.graded_by ? 'ครูแก้คะแนนแล้ว' : 'ตรวจอัตโนมัติ' }}
-      {{ formatScore(submission.grades.total) }}/4 — การบันทึกใหม่จะแทนที่คะแนนเดิม
+      {{ formatScore(submission.grades.total) }}/๔ — การบันทึกใหม่จะแทนที่คะแนนเดิม
     </p>
 
     <ul class="mt-4 flex gap-2" aria-label="เลขที่ได้">
@@ -75,14 +75,14 @@ function save(goNext: boolean) {
 
     <div class="mt-5 space-y-4">
       <article v-for="(w, i) in submission.words" :key="i" class="rounded-card p-4 sm:p-5" :class="TONES[i % 4]">
-        <p class="font-bold">คำที่ {{ i + 1 }} · เลข {{ toThaiDigits(String(submission.digits[i])) }}</p>
+        <p class="font-bold">คำที่ {{ toThaiDigits(String(i + 1)) }} · เลข {{ toThaiDigits(String(submission.digits[i])) }}</p>
         <p class="text-ink-soft">คำนามที่สุ่มได้: <NounText :text="submission.drawn_nouns[i] ?? ''" /></p>
         <p class="mt-2 text-sm font-semibold text-ink-soft">ชนิดคำนามที่ตอบ</p>
         <p class="text-2xl font-extrabold">{{ w.word }}</p>
         <p class="mt-2">เพราะ {{ w.reason }}</p>
         <div class="mt-3 space-y-3">
           <div>
-            <p class="mb-1 text-sm font-semibold">ชนิดคำนาม (0.5 คะแนน)</p>
+            <p class="mb-1 text-sm font-semibold">ชนิดคำนาม (๐.๕ คะแนน)</p>
             <MarkToggle
               :model-value="typeOk[i] ?? null"
               :label="`ชนิดคำนามของคำที่ ${i + 1}`"
@@ -92,7 +92,7 @@ function save(goNext: boolean) {
             />
           </div>
           <div>
-            <p class="mb-1 text-sm font-semibold">เหตุผล (0.5 คะแนน)</p>
+            <p class="mb-1 text-sm font-semibold">เหตุผล (๐.๕ คะแนน)</p>
             <MarkToggle
               :model-value="reasonOk[i] ?? null"
               :label="`เหตุผลของคำที่ ${i + 1}`"
@@ -120,12 +120,12 @@ function save(goNext: boolean) {
     <div class="mt-5 flex items-center justify-between rounded-card bg-tint-yellow px-5 py-4">
       <span class="text-lg font-bold">คะแนน</span>
       <span class="text-3xl font-extrabold" aria-live="polite">
-        {{ allChosen ? formatScore(total) : '–' }}<span class="ml-1 text-xl font-semibold text-ink-soft">/ 4</span>
+        {{ allChosen ? formatScore(total) : '–' }}<span class="ml-1 text-xl font-semibold text-ink-soft">/ ๔</span>
       </span>
     </div>
 
     <p v-if="tried && !allChosen" role="alert" class="mt-3 rounded-field bg-tint-red px-4 py-3 text-bad">
-      เลือก ถูก หรือ ไม่ถูก ให้ครบทั้งชนิดคำนามและเหตุผลของทั้ง 4 คำก่อนบันทึกนะ
+      เลือก ถูก หรือ ไม่ถูก ให้ครบทั้งชนิดคำนามและเหตุผลของทั้ง ๔ คำก่อนบันทึกนะ
     </p>
     <p v-if="error" role="alert" class="mt-3 rounded-field bg-tint-red px-4 py-3 text-bad">{{ error }}</p>
 

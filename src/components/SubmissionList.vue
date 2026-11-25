@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { numFrom } from '@/lib/numeric'
+import { toThaiDigits } from '@shared/drawn'
 import { LEVELS } from '@shared/constants'
 import StatusBadge from './StatusBadge.vue'
+import { formatScore } from '@/lib/format'
 import { seatLabel, type Filters, type SubmissionRow } from '@/lib/teacher'
 
 defineProps<{ rows: SubmissionRow[]; selectedId: string | null; loading?: boolean }>()
@@ -28,7 +31,7 @@ function set<K extends keyof Filters>(key: K, value: Filters[K]) {
       <div class="grid grid-cols-2 gap-3">
         <select class="field" aria-label="ชั้น" :value="filters.level" @change="set('level', ($event.target as HTMLSelectElement).value)">
           <option value="">ทุกชั้น</option>
-          <option v-for="l in LEVELS" :key="l" :value="l">{{ l }}</option>
+          <option v-for="l in LEVELS" :key="l" :value="l">{{ toThaiDigits(l) }}</option>
         </select>
         <input
           class="field"
@@ -36,8 +39,8 @@ function set<K extends keyof Filters>(key: K, value: Filters[K]) {
           maxlength="2"
           placeholder="ห้อง"
           aria-label="ห้อง"
-          :value="filters.room"
-          @input="set('room', ($event.target as HTMLInputElement).value.replace(/\D/g, ''))"
+          :value="toThaiDigits(filters.room)"
+          @input="set('room', numFrom($event))"
         />
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -67,14 +70,14 @@ function set<K extends keyof Filters>(key: K, value: Filters[K]) {
         >
           <span class="min-w-0">
             <span class="block truncate font-bold">{{ r.student_name }}</span>
-            <span class="block text-ink-soft">{{ seatLabel(r) }} · เลขที่ {{ r.student_no }}</span>
+            <span class="block text-ink-soft">{{ toThaiDigits(seatLabel(r)) }} · เลขที่ {{ toThaiDigits(String(r.student_no)) }}</span>
           </span>
           <span
             v-if="r.grades"
             class="badge shrink-0 bg-tint-green text-ok"
-            :aria-label="`ตรวจแล้ว ${r.grades.total} จาก 4`"
+            :aria-label="`ตรวจแล้ว ${formatScore(r.grades.total)} จาก ๔`"
           >
-            {{ r.grades.total }}/4
+            {{ formatScore(r.grades.total) }}/๔
           </span>
           <StatusBadge v-else status="waiting" class="shrink-0" />
         </button>

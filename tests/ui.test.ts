@@ -135,7 +135,7 @@ describe('drawn words and Thai digits', () => {
 
 describe('format helpers', () => {
   it('formats Buddhist-era date and Bangkok time', () => {
-    expect(formatThaiDateTime('2026-11-25T02:42:00Z')).toBe('25 พ.ย. 2569 • 09:42 น.')
+    expect(formatThaiDateTime('2026-11-25T02:42:00Z')).toBe('๒๕ พ.ย. ๒๕๖๙ • ๐๙:๔๒ น.')
   })
   it('returns a message for every total', () => {
     for (const t of [0, 1, 2, 3, 4]) expect(scoreMessage(t)).toBeTruthy()

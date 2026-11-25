@@ -120,7 +120,7 @@ async function submit() {
 
     <div class="text-center">
       <DiceMagic />
-      <p class="mt-2 font-semibold text-primary">กิจกรรมคำนาม • ม.1</p>
+      <p class="mt-2 font-semibold text-primary">กิจกรรมคำนาม • ม.๑</p>
       <h1 class="mt-1 text-4xl font-extrabold sm:text-5xl">ลุ้นทายเลข เสกคำนาม</h1>
       <p class="mt-2 text-ink-soft">ทอยเลข จับคำ แล้วอธิบายด้วยไอเดียของเรา</p>
     </div>
@@ -132,7 +132,7 @@ async function submit() {
 
     <section aria-labelledby="magic">
       <h2 id="magic" class="text-3xl font-extrabold">เสกคำนามของเรา</h2>
-      <p class="mt-1 text-ink-soft">เขียนคำนามทั้ง 4 คำ พร้อมบอกเหตุผลว่าทำไมจึงเป็นคำนาม</p>
+      <p class="mt-1 text-ink-soft">เขียนคำนามทั้ง ๔ คำ พร้อมบอกเหตุผลว่าทำไมจึงเป็นคำนาม</p>
       <div class="mt-5 space-y-5">
         <WordCard
           v-for="(w, i) in form.words"
@@ -150,7 +150,7 @@ async function submit() {
       <p v-if="serverError" role="alert" class="rounded-field bg-tint-red px-4 py-3 text-bad">
         {{ serverError }}
       </p>
-      <p class="text-ink-soft">ตรวจดูคำตอบให้ครบทั้ง 4 คำก่อนส่งนะ</p>
+      <p class="text-ink-soft">ตรวจดูคำตอบให้ครบทั้ง ๔ คำก่อนส่งนะ</p>
       <button type="submit" class="btn-primary sm:min-w-[220px]" :disabled="sending">
         {{ sending ? 'กำลังส่ง...' : 'ส่งคำตอบ →' }}
       </button>

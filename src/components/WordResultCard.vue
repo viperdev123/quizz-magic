@@ -24,7 +24,7 @@ const NUM_TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-
           {{ toThaiDigits(String(item.digit)) }}
         </span>
         <div>
-          <p class="text-ink-soft">คำที่ {{ index }}</p>
+          <p class="text-ink-soft">คำที่ {{ toThaiDigits(String(index)) }}</p>
           <p class="font-semibold">คำนามที่สุ่มได้: <NounText :text="item.drawnNoun" /></p>
         </div>
       </div>
@@ -43,10 +43,10 @@ const NUM_TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-
 
     <ul class="mt-4 flex flex-wrap gap-2 text-sm font-semibold" aria-label="ผลการตรวจคำนี้">
       <li class="badge" :class="item.typeOk ? 'bg-tint-green text-ok' : 'bg-tint-red text-bad'">
-        {{ item.typeOk ? '✓' : '✗' }} ชนิดคำนาม (0.5)
+        {{ item.typeOk ? '✓' : '✗' }} ชนิดคำนาม (๐.๕)
       </li>
       <li class="badge" :class="item.reasonOk ? 'bg-tint-green text-ok' : 'bg-tint-red text-bad'">
-        {{ item.reasonOk ? '✓' : '✗' }} เหตุผล (0.5)
+        {{ item.reasonOk ? '✓' : '✗' }} เหตุผล (๐.๕)
       </li>
     </ul>
 

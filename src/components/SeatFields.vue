@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { numFrom } from '@/lib/numeric'
+import { toThaiDigits } from '@shared/drawn'
 import { LEVELS } from '@shared/constants'
 
 // ชั้น / ห้อง / เลขที่ — shared by the submit and score forms
@@ -16,7 +18,7 @@ defineEmits<{ 'update:level': [string]; 'update:room': [string]; 'update:student
         :value="level"
         @change="$emit('update:level', ($event.target as HTMLSelectElement).value)"
       >
-        <option v-for="l in LEVELS" :key="l" :value="l">{{ l }}</option>
+        <option v-for="l in LEVELS" :key="l" :value="l">{{ toThaiDigits(l) }}</option>
       </select>
     </label>
     <label class="block">
@@ -25,12 +27,12 @@ defineEmits<{ 'update:level': [string]; 'update:room': [string]; 'update:student
         class="field"
         :class="invalid && !room ? '!border-bad' : ''"
         :aria-invalid="invalid && !room ? 'true' : undefined"
-        :value="room"
+        :value="toThaiDigits(room)"
         inputmode="numeric"
         maxlength="2"
         autocomplete="off"
         placeholder="ห้อง"
-        @input="$emit('update:room', ($event.target as HTMLInputElement).value.replace(/\D/g, ''))"
+        @input="$emit('update:room', numFrom($event))"
       />
     </label>
     <label class="block">
@@ -39,12 +41,12 @@ defineEmits<{ 'update:level': [string]; 'update:room': [string]; 'update:student
         class="field"
         :class="invalid && !studentNo ? '!border-bad' : ''"
         :aria-invalid="invalid && !studentNo ? 'true' : undefined"
-        :value="studentNo"
+        :value="toThaiDigits(studentNo)"
         inputmode="numeric"
         maxlength="2"
         autocomplete="off"
         placeholder="เลขที่"
-        @input="$emit('update:studentNo', ($event.target as HTMLInputElement).value.replace(/\D/g, ''))"
+        @input="$emit('update:studentNo', numFrom($event))"
       />
     </label>
   </div>

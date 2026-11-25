@@ -6,6 +6,7 @@ import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import { TURNSTILE_ENABLED } from '@/lib/config'
 import { lookupScore } from '@/lib/api'
 import { MESSAGES } from '@shared/constants'
+import { toThaiDigits } from '@shared/drawn'
 import { ScoreReqSchema, type ScoreRes } from '@shared/schemas'
 
 const form = reactive({ level: 'ม.1', room: '', studentNo: '' })
@@ -91,7 +92,7 @@ async function search() {
         <p class="text-5xl text-star" aria-hidden="true">◔</p>
         <h2 class="mt-4 text-3xl font-extrabold text-star">รอครูตรวจ</h2>
         <p class="mt-3 text-ink-soft">
-          {{ result.name }} • {{ result.level }}/{{ result.room }} • เลขที่ {{ result.studentNo }}
+          {{ result.name }} • {{ toThaiDigits(`${result.level}/${result.room}`) }} • เลขที่ {{ toThaiDigits(String(result.studentNo)) }}
         </p>
         <p class="mt-1 text-ink-soft">ส่งคำตอบแล้วนะ! รอคำแนะนำจากครูอีกนิด</p>
         <button type="button" class="btn-primary mt-6 w-full sm:w-auto" @click="result = null">ดูคะแนนอีกครั้ง</button>

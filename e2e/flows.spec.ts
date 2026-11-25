@@ -44,7 +44,7 @@ async function submitWorksheet(page: Page) {
   for (const w of ['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง']) await expect(page.getByText(w).first()).toBeVisible()
   // the student's own work: the noun type and the reason for each word
   for (let i = 0; i < 4; i++) {
-    await page.getByLabel(`คำที่ ${i + 1} :`, { exact: true }).fill(ANSWERS[i]![0])
+    await page.getByLabel(`คำที่ ${'๑๒๓๔'[i]} :`, { exact: true }).fill(ANSWERS[i]![0])
     await page.getByPlaceholder('เพราะว่า...').nth(i).fill(ANSWERS[i]![1])
   }
   await waitForTurnstile(page)
@@ -67,12 +67,12 @@ async function lookupScore(page: Page) {
 test('flow 1: the student submits and sees the score straight away', async ({ page }) => {
   await submitWorksheet(page)
   await expect(page.getByRole('heading', { name: 'ส่งคำตอบเรียบร้อย!' })).toBeVisible()
-  await expect(page.getByText('3 / 4')).toBeVisible()
+  await expect(page.getByText('๓ / ๔')).toBeVisible()
   await expect(page.getByText('เยี่ยมมาก! เรียนรู้ต่อไปนะ')).toBeVisible()
   // the wrong answer (word 4) is marked and the key is shown: it is the only attempt
   await expect(page.getByText(/ชนิดที่ถูกคือ คำนามสามัญ/)).toBeVisible()
-  await expect(page.getByText('✓ ชนิดคำนาม (0.5)').first()).toBeVisible()
-  await expect(page.getByText('✗ ชนิดคำนาม (0.5)')).toBeVisible()
+  await expect(page.getByText('✓ ชนิดคำนาม (๐.๕)').first()).toBeVisible()
+  await expect(page.getByText('✗ ชนิดคำนาม (๐.๕)')).toBeVisible()
 
   const sub = await t.admin.from('submissions').select('id, student_name, digits, drawn_nouns').match(SEAT).single()
   const row = sub.data as { id: string; student_name: string; digits: number[]; drawn_nouns: string[] }
@@ -97,10 +97,10 @@ test('flow 2: the teacher sees the automatic grade and can correct a half point'
   await loginTeacher(page)
   await page.getByLabel('ค้นหาชื่อหรือเลขที่').fill('อีทูอี')
   await page.getByRole('button', { name: new RegExp(NAME) }).click()
-  await expect(page.getByText(/ตรวจอัตโนมัติ\s+3\/4/)).toBeVisible()
+  await expect(page.getByText(/ตรวจอัตโนมัติ\s+๓\/๔/)).toBeVisible()
 
   // word 4: the teacher decides the noun type was acceptable after all -> +0.5
-  await page.getByRole('radiogroup', { name: 'ชนิดคำนามของคำที่ 4' }).getByRole('radio', { name: /ถูก \(0\.5\)/ }).first().click()
+  await page.getByRole('radiogroup', { name: 'ชนิดคำนามของคำที่ 4' }).getByRole('radio', { name: /ถูก \(๐\.๕\)/ }).first().click()
   await page.getByLabel('ความเห็นของคำที่ 4').fill('ครูปรับให้ครึ่งคะแนน')
   await page.getByRole('button', { name: 'บันทึกคะแนน', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'บันทึกคะแนนเรียบร้อย' })).toBeVisible()
@@ -113,7 +113,7 @@ test('flow 2: the teacher sees the automatic grade and can correct a half point'
 
 test('flow 3: the student looks the score up later and sees the teacher correction', async ({ page }) => {
   await lookupScore(page)
-  await expect(page.getByText('3.5 / 4')).toBeVisible()
+  await expect(page.getByText('๓.๕ / ๔')).toBeVisible()
   await expect(page.getByText('ครูปรับให้ครึ่งคะแนน')).toBeVisible()
   await page.screenshot({ path: 'test-results/screens/score-graded.png', fullPage: true })
 })
@@ -146,7 +146,7 @@ test.describe('accessibility (axe, WCAG 2.x A/AA)', () => {
   })
   test('the score result (half stars, per-half chips, advice boxes)', async ({ page }) => {
     await lookupScore(page)
-    await expect(page.getByText('3.5 / 4')).toBeVisible()
+    await expect(page.getByText('๓.๕ / ๔')).toBeVisible()
     expect(await scan(page)).toEqual([])
   })
   test('teacher page with a graded student open', async ({ page }) => {

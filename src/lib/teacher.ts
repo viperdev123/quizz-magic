@@ -1,4 +1,5 @@
 import { LEVELS } from '@shared/constants'
+import { toArabicDigits } from '@shared/drawn'
 import { normalizeName } from '@shared/normalize'
 import { thaiCollator } from './format'
 
@@ -46,7 +47,7 @@ export function sortRows(rows: SubmissionRow[], sort: Filters['sort']): Submissi
 }
 
 export function filterRows(rows: SubmissionRow[], f: Filters): SubmissionRow[] {
-  const q = normalizeName(f.q)
+  const q = normalizeName(toArabicDigits(f.q)) // a number may be searched in Thai or Arabic digits
   const kept = rows.filter((r) => {
     if (f.status === 'waiting' && r.grades) return false
     if (f.status === 'graded' && !r.grades) return false

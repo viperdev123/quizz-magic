@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import TabBar, { type TabItem } from './TabBar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ACTIVITY_LABEL } from '@shared/constants'
+import { toThaiDigits } from '@shared/drawn'
 
 const auth = useAuthStore()
 const route = useRoute()
@@ -17,9 +18,8 @@ async function logout() {
 const tabs = computed<TabItem[]>(() => [
   { to: '/submit', label: 'ส่งงาน' },
   { to: '/score', label: 'ดูคะแนน' },
-  ...(auth.isTeacher ? [{ to: '/teacher', label: 'ครูตรวจงาน' }] : []),
 ])
-const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำหรับครู' : ACTIVITY_LABEL))
+const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำหรับครู' : toThaiDigits(ACTIVITY_LABEL)))
 </script>
 
 <template>
@@ -55,7 +55,7 @@ const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำ�
     <footer class="bg-footer">
       <div class="mx-auto max-w-6xl px-4 py-6 sm:px-8">
         <p class="font-bold">ลุ้นทายเลข เสกคำนาม</p>
-        <p class="text-ink-soft">กิจกรรมภาษาไทย • คำนามน่ารู้ ชั้นมัธยมศึกษาปีที่ 1</p>
+        <p class="text-ink-soft">กิจกรรมภาษาไทย • คำนามน่ารู้ ชั้นมัธยมศึกษาปีที่ ๑</p>
         <RouterLink v-if="!auth.isTeacher" to="/teacher/login" class="mt-2 inline-block text-sm text-ink-soft underline">
           สำหรับครู
         </RouterLink>
