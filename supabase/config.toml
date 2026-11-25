@@ -1,0 +1,18 @@
+# Minimal Supabase CLI config for local development.
+# Run `supabase init` in a scratch folder if you need the full default file.
+project_id = "lun-thai-lek"
+
+[api]
+port = 54321
+schemas = ["public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+site_url = "http://localhost:5173"
+enable_signup = false   # teachers are created by an admin, never self-registered
+
+[realtime]
+enabled = true
