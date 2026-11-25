@@ -2,6 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { getSupabase } from '@/lib/supabase'
 
+export type SignInResult = 'ok' | 'invalid' | 'not_teacher'
+
 export const useAuthStore = defineStore('auth', () => {
   const isTeacher = ref(false)
   const ready = ref(false)
@@ -25,12 +27,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function signIn(email: string, password: string): Promise<boolean> {
+  async function signIn(email: string, password: string): Promise<SignInResult> {
     // Hook for later: add signInWithOAuth({ provider: 'google' }) here.
-    const { error } = await getSupabase().auth.signInWithPassword({ email, password })
-    if (error) return false
+    const sb = getSupabase()
+    const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password })
+    if (error) return 'invalid'
     await refresh()
-    return isTeacher.value
+    if (!isTeacher.value) {
+      await sb.auth.signOut() // valid account, but not a teacher: do not keep the session
+      return 'not_teacher'
+    }
+    return 'ok'
   }
 
   async function signOut() {
@@ -38,5 +45,16 @@ export const useAuthStore = defineStore('auth', () => {
     isTeacher.value = false
   }
 
-  return { isTeacher, ready, refresh, signIn, signOut }
+  /** Keep the UI in sync when the session ends elsewhere (other tab, expiry). */
+  function watchSession(onSignedOut: () => void) {
+    const { data } = getSupabase().auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        isTeacher.value = false
+        onSignedOut()
+      }
+    })
+    return () => data.subscription.unsubscribe()
+  }
+
+  return { isTeacher, ready, refresh, signIn, signOut, watchSession }
 })

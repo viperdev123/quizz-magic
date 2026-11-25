@@ -7,7 +7,12 @@ export const router = createRouter({
     { path: '/', redirect: '/submit' },
     { path: '/submit', name: 'submit', component: () => import('@/views/SubmitView.vue') },
     { path: '/score', name: 'score', component: () => import('@/views/ScoreView.vue') },
-    { path: '/teacher/login', name: 'teacher-login', component: () => import('@/views/TeacherLoginView.vue') },
+    {
+      path: '/teacher/login',
+      name: 'teacher-login',
+      component: () => import('@/views/TeacherLoginView.vue'),
+      meta: { guestOnly: true },
+    },
     {
       path: '/teacher',
       name: 'teacher',
@@ -20,8 +25,10 @@ export const router = createRouter({
 
 // UX guard only. Real enforcement is Row Level Security in Postgres.
 router.beforeEach(async (to) => {
-  if (!to.meta.requiresTeacher) return true
+  if (!to.meta.requiresTeacher && !to.meta.guestOnly) return true
   const auth = useAuthStore()
   if (!auth.ready) await auth.refresh()
-  return auth.isTeacher ? true : { name: 'teacher-login' }
+  if (to.meta.requiresTeacher && !auth.isTeacher) return { name: 'teacher-login' }
+  if (to.meta.guestOnly && auth.isTeacher) return { name: 'teacher' }
+  return true
 })

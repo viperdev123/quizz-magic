@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import TabBar, { type TabItem } from './TabBar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ACTIVITY_LABEL } from '@shared/constants'
 
 const auth = useAuthStore()
 const route = useRoute()
+const router = useRouter()
+
+async function logout() {
+  await auth.signOut()
+  await router.replace({ name: 'teacher-login' })
+}
 
 const tabs = computed<TabItem[]>(() => [
   { to: '/submit', label: 'ส่งงาน' },
@@ -32,7 +38,12 @@ const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำ�
           </svg>
           ห้องเรียนคำนาม
         </div>
-        <span class="text-sm text-ink-soft">{{ rightLabel }}</span>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-ink-soft">{{ rightLabel }}</span>
+          <button v-if="auth.isTeacher" type="button" class="btn-outline !min-h-tap !px-4 text-sm" @click="logout">
+            ออกจากระบบ
+          </button>
+        </div>
       </div>
       <div class="mx-auto max-w-6xl px-4 py-3 sm:px-8"><TabBar :tabs="tabs" /></div>
     </header>
@@ -45,6 +56,9 @@ const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำ�
       <div class="mx-auto max-w-6xl px-4 py-6 sm:px-8">
         <p class="font-bold">ลุ้นทายเลข เสกคำนาม</p>
         <p class="text-ink-soft">กิจกรรมภาษาไทย • คำนามน่ารู้ ชั้นมัธยมศึกษาปีที่ 1</p>
+        <RouterLink v-if="!auth.isTeacher" to="/teacher/login" class="mt-2 inline-block text-sm text-ink-soft underline">
+          สำหรับครู
+        </RouterLink>
       </div>
     </footer>
   </div>
