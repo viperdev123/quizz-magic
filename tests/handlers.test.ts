@@ -78,7 +78,7 @@ describe('POST /api/submit', () => {
     const { comments } = submit.mock.calls[0]![0] as { comments: string[] }
     expect(comments).toHaveLength(4)
     expect(comments[0]).toContain('ถูกต้อง')
-    expect(comments[3]).toContain('สามานยนาม') // after a wrong answer the key is revealed (one attempt only)
+    expect(comments[3]).toContain('คำนามสามัญ') // after a wrong answer the key is revealed (one attempt only)
   })
 
   it('ignores a score or marks sent by the client', async () => {

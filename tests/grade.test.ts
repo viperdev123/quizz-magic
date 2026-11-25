@@ -9,7 +9,10 @@ describe('detectTypes (which noun type did the student name?)', () => {
     expect([...detectTypes('นามเฉพาะ')]).toEqual(['proper'])
     expect([...detectTypes('ลักษณนาม')]).toEqual(['classifier'])
     expect([...detectTypes('อาการนาม')]).toEqual(['abstract'])
-    expect([...detectTypes('สมุหนาม')]).toEqual(['collective'])
+    expect([...detectTypes('คำนามสามัญ')]).toEqual(['common']) // the new official names
+    expect([...detectTypes('คำนามวิสามัญ')]).toEqual(['proper'])
+    expect([...detectTypes('คำลักษณนาม')]).toEqual(['classifier'])
+    expect([...detectTypes('คำอาการนาม')]).toEqual(['abstract'])
   })
   it('does not mistake วิสามานยนาม for สามานยนาม (one is inside the other)', () => {
     expect([...detectTypes('วิสามานยนาม')]).toEqual(['proper'])

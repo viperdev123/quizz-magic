@@ -70,7 +70,7 @@ test('flow 1: the student submits and sees the score straight away', async ({ pa
   await expect(page.getByText('3 / 4')).toBeVisible()
   await expect(page.getByText('เยี่ยมมาก! เรียนรู้ต่อไปนะ')).toBeVisible()
   // the wrong answer (word 4) is marked and the key is shown: it is the only attempt
-  await expect(page.getByText(/ชนิดที่ถูกคือ สามานยนาม/)).toBeVisible()
+  await expect(page.getByText(/ชนิดที่ถูกคือ คำนามสามัญ/)).toBeVisible()
   await expect(page.getByText('✓ ชนิดคำนาม (0.5)').first()).toBeVisible()
   await expect(page.getByText('✗ ชนิดคำนาม (0.5)')).toBeVisible()
 

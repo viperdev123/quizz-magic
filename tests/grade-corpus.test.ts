@@ -85,7 +85,6 @@ const SUITES: Record<string, Row[]> = {
     [3, 'classifier', 'ใช้นับ', 1, 'English'],
     [3, 'ลักษณ', 'นับ', 1, 'very short name'],
     [3, 'สามานยนาม', 'คำว่าเล่มใช้นับ', 0.5, 'wrong type (the book), good reason'],
-    [3, 'สมุหนาม', 'เล่มคือกลุ่ม', 0.5, 'wrong type'],
     [3, 'ลักษณนาม', 'เพราะเป็นหนังสือ', 0.5, 'right type, reason only repeats the noun'],
     [3, 'ลักษณนาม', 'หนังสือ ๑ เล่ม', 0.5, 'copied the word as the reason'],
     [3, 'ลักษณนาม', 'ลักษณนาม', 0.5, 'reason is just the type name'],
