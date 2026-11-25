@@ -20,7 +20,7 @@ export const SubmitReqSchema = z.object({
   /** Deprecated: ignored. The server derives the noun from each digit (shared/drawn.ts). */
   drawnNouns: z.tuple([noun, noun, noun, noun]).optional(),
   words: z.tuple([wordItem, wordItem, wordItem, wordItem]),
-  turnstileToken: z.string().min(1),
+  turnstileToken: z.string().min(1).optional(),
 })
 export type SubmitReq = z.infer<typeof SubmitReqSchema>
 
@@ -29,7 +29,7 @@ export const ScoreReqSchema = z.object({
   level: LevelSchema,
   room,
   studentNo,
-  turnstileToken: z.string().min(1),
+  turnstileToken: z.string().min(1).optional(),
 })
 export type ScoreReq = z.infer<typeof ScoreReqSchema>
 

@@ -49,8 +49,9 @@ export interface ScoreStore {
 }
 
 export const LIMITS_PER_ROUTE = {
-  submit: { limit: 10, windowSec: 600 },
-  score: { limit: 5, windowSec: 60 },
+  // A whole class often shares one school IP, so these are generous (demo, Turnstile off).
+  submit: { limit: 60, windowSec: 600 },
+  score: { limit: 30, windowSec: 60 },
 } as const
 
 const STATUS: Record<ApiErrorCode, number> = {
@@ -86,7 +87,7 @@ export async function handleSubmit(
   if (!parsed.success) return fail('INVALID')
   const req = parsed.data
 
-  if (!(await guards.verifyTurnstile(req.turnstileToken))) return fail('TURNSTILE')
+  if (!(await guards.verifyTurnstile(req.turnstileToken ?? ''))) return fail('TURNSTILE')
 
   try {
     const outcome = await store.submit({
@@ -120,7 +121,7 @@ export async function handleScore(
   if (!parsed.success) return fail('INVALID')
   const req = parsed.data
 
-  if (!(await guards.verifyTurnstile(req.turnstileToken))) return fail('TURNSTILE')
+  if (!(await guards.verifyTurnstile(req.turnstileToken ?? ''))) return fail('TURNSTILE')
 
   let row: StoredSubmission | null
   try {

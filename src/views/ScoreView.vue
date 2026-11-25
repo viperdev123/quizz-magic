@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import SeatFields from '@/components/SeatFields.vue'
 import StatusBadge from '@/components/StatusBadge.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
+import { TURNSTILE_ENABLED } from '@/lib/config'
 import WordResultCard from '@/components/WordResultCard.vue'
 import { lookupScore } from '@/lib/api'
 import { formatThaiDateTime, scoreMessage } from '@/lib/format'
@@ -23,19 +24,19 @@ async function search() {
     level: form.level,
     room: Number(form.room),
     studentNo: Number(form.studentNo),
-    turnstileToken: token.value || 'pending',
+    turnstileToken: TURNSTILE_ENABLED ? token.value || 'pending' : undefined,
   })
   if (!form.room || !form.studentNo || !parsed.success) {
     showInvalid.value = true
     return
   }
   showInvalid.value = false
-  if (!token.value) {
+  if (TURNSTILE_ENABLED && !token.value) {
     error.value = MESSAGES.turnstilePending
     return
   }
   loading.value = true
-  const res = await lookupScore({ ...parsed.data, turnstileToken: token.value })
+  const res = await lookupScore({ ...parsed.data, turnstileToken: TURNSTILE_ENABLED ? token.value : undefined })
   loading.value = false
   turnstile.value?.reset()
   if ('status' in res) {
@@ -66,7 +67,7 @@ async function search() {
         </button>
       </div>
       <p v-if="showInvalid" role="alert" class="mt-3 text-bad">{{ MESSAGES.invalid }}</p>
-      <TurnstileWidget ref="turnstile" class="mt-4" @token="token = $event" />
+      <TurnstileWidget v-if="TURNSTILE_ENABLED" ref="turnstile" class="mt-4" @token="token = $event" />
       <p v-if="error" role="alert" class="mt-3 rounded-field bg-tint-red px-4 py-3 text-bad">{{ error }}</p>
     </form>
 

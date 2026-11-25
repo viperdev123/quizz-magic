@@ -226,3 +226,23 @@ describe('serve() never leaks platform errors', () => {
     expect(await res.json()).toEqual({ ok: false, code: 'ERROR', message: MESSAGES.error })
   })
 })
+
+describe('Turnstile is optional', () => {
+  const { turnstileToken: _t, ...bodyNoToken } = submitBody
+  void _t
+  const scoreNoToken = { level: 'ม.1', room: 2, studentNo: 12 }
+
+  it('accepts a submit and a score lookup without any token when verification is off', async () => {
+    const off: Guards = { rateLimit: async () => true, verifyTurnstile: async () => true }
+    expect((await handleSubmit(bodyNoToken, off, { submit: vi.fn().mockResolvedValue('ok') })).status).toBe(200)
+    expect((await handleScore(scoreNoToken, off, { find: async () => null })).body).toEqual({ status: 'not_found' })
+  })
+
+  it('still rejects a missing token when verification is on (the guard receives an empty token)', async () => {
+    const seen: string[] = []
+    const on: Guards = { rateLimit: async () => true, verifyTurnstile: async (t) => (seen.push(t), t !== '') }
+    const res = await handleSubmit(bodyNoToken, on, { submit: vi.fn() })
+    expect(res.body).toMatchObject({ ok: false, code: 'TURNSTILE' })
+    expect(seen).toEqual([''])
+  })
+})

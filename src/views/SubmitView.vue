@@ -4,6 +4,7 @@ import DiceMagic from '@/components/DiceMagic.vue'
 import DigitBoxes from '@/components/DigitBoxes.vue'
 import SeatFields from '@/components/SeatFields.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
+import { TURNSTILE_ENABLED } from '@/lib/config'
 import WordCard from '@/components/WordCard.vue'
 import { submitWorksheet } from '@/lib/api'
 import { MESSAGES } from '@shared/constants'
@@ -50,19 +51,19 @@ async function submit() {
     studentNo: Number(form.studentNo),
     digits: form.digits.map(Number),
     words: form.words,
-    turnstileToken: token.value || 'pending',
+    turnstileToken: TURNSTILE_ENABLED ? token.value || 'pending' : undefined,
   })
   if (emptyField.value || !parsed.success) {
     showInvalid.value = true
     return
   }
   showInvalid.value = false
-  if (!token.value) {
+  if (TURNSTILE_ENABLED && !token.value) {
     serverError.value = MESSAGES.turnstilePending
     return
   }
   sending.value = true
-  const res = await submitWorksheet({ ...parsed.data, turnstileToken: token.value })
+  const res = await submitWorksheet({ ...parsed.data, turnstileToken: TURNSTILE_ENABLED ? token.value : undefined })
   sending.value = false
   turnstile.value?.reset() // tokens are single-use
   if (res.ok) {
@@ -164,7 +165,7 @@ async function submit() {
     </section>
 
     <div class="flex flex-col items-stretch gap-4 sm:items-end">
-      <TurnstileWidget ref="turnstile" @token="token = $event" />
+      <TurnstileWidget v-if="TURNSTILE_ENABLED" ref="turnstile" @token="token = $event" />
       <p v-if="serverError" role="alert" class="rounded-field bg-tint-red px-4 py-3 text-bad">
         {{ serverError }}
       </p>

@@ -3,10 +3,10 @@ import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 
-const REQUIRED = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'VITE_TURNSTILE_SITE_KEY']
+const REQUIRED = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'] // VITE_TURNSTILE_SITE_KEY is optional
 
 export default defineConfig(({ command, mode }) => {
-  // A production bundle without these builds fine but is silently broken (login and Turnstile fail), so stop here.
+  // A production bundle without these builds fine but is silently broken (teacher login fails), so stop here.
   if (command === 'build' && mode === 'production') {
     const env = loadEnv(mode, process.cwd(), 'VITE_')
     const missing = REQUIRED.filter((k) => !env[k]?.trim())

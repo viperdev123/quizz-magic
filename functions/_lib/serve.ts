@@ -39,7 +39,11 @@ async function run(request: Request, env: Env, kind: 'submit' | 'score'): Promis
 
   const guards: Guards = {
     rateLimit: (route, limit, windowSec) => checkRateLimit(env.RATE_LIMIT, route, ip, limit, windowSec),
-    verifyTurnstile: (token) => verifyTurnstile(token, env.TURNSTILE_SECRET_KEY, ip === 'unknown' ? null : ip),
+    // Human verification is optional: with no secret configured it is skipped entirely.
+    verifyTurnstile: (token) =>
+      env.TURNSTILE_SECRET_KEY?.trim()
+        ? verifyTurnstile(token, env.TURNSTILE_SECRET_KEY, ip === 'unknown' ? null : ip)
+        : Promise.resolve(true),
   }
   const stores = createStores(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY)
 
