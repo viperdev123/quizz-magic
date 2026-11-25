@@ -132,7 +132,7 @@ async function submit() {
 
     <section aria-labelledby="magic">
       <h2 id="magic" class="text-3xl font-extrabold">เสกคำนามของเรา</h2>
-      <p class="mt-1 text-ink-soft">เขียนคำนามทั้ง ๔ คำ พร้อมบอกเหตุผลว่าทำไมจึงเป็นคำนาม</p>
+      <p class="mt-1 text-ink-soft">เขียนชนิดคำนามทั้ง ๔ คำ พร้อมบอกเหตุผลว่าทำไมจึงเป็นคำนาม</p>
       <div class="mt-5 space-y-5">
         <WordCard
           v-for="(w, i) in form.words"
