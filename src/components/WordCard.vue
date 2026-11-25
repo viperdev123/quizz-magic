@@ -10,15 +10,13 @@ const props = defineProps<{
 }>()
 defineEmits<{ 'update:word': [string]; 'update:reason': [string] }>()
 
-const TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-green']
-const tone = computed(() => TONES[(props.index - 1) % 4])
 const num = computed(() => toThaiDigits(String(props.index).padStart(2, '0')))
 </script>
 
 <template>
-  <section class="rounded-card p-5 sm:p-6" :class="tone" :aria-label="`คำที่ ${index}`">
+  <section class="card border-l-[6px] !border-l-primary p-5 sm:p-6" :aria-label="`คำที่ ${index}`">
     <header class="mb-4 flex items-center gap-3">
-      <span class="rounded-field bg-white px-3 py-2 text-lg font-extrabold text-primary">{{ num }}</span>
+      <span class="rounded-field bg-primary px-3 py-2 text-lg font-extrabold text-white">{{ num }}</span>
       <h3 class="text-xl font-bold">คำที่ {{ toThaiDigits(String(index)) }}</h3>
     </header>
     <div class="grid gap-4 sm:grid-cols-[1fr_2fr]">

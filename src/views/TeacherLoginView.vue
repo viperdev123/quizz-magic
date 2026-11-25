@@ -37,7 +37,7 @@ async function submit() {
     <h1 class="mt-1 text-4xl font-extrabold">เข้าสู่ระบบครู</h1>
     <p class="mt-2 text-ink-soft">ลุ้นทายเลข เสกคำนาม • จัดการงานและส่งต่อกำลังใจ</p>
 
-    <form novalidate class="mt-6 space-y-4 rounded-card border border-line/70 bg-white p-5 sm:p-6" @submit.prevent="submit">
+    <form novalidate class="mt-6 space-y-4 card p-5 sm:p-6" @submit.prevent="submit">
       <label class="block">
         <span class="mb-2 block font-semibold">อีเมล</span>
         <input v-model="email" type="email" autocomplete="username" class="field" placeholder="teacher@school.ac.th" />

@@ -23,7 +23,7 @@ defineProps<{ result: GradedScore }>()
         <p class="mt-3 text-6xl font-extrabold">{{ formatScore(result.total) }} / ๔</p>
         <p class="mt-4 font-bold">{{ scoreMessage(result.total) }}</p>
       </div>
-      <div class="rounded-card bg-white p-5">
+      <div class="card p-5">
         <StatusBadge status="graded" />
         <p class="mt-3 text-xl font-bold">{{ result.name }}</p>
         <p class="text-ink-soft">{{ toThaiDigits(`${result.level}/${result.room}`) }} • เลขที่ {{ toThaiDigits(String(result.studentNo)) }}</p>

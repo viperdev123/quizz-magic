@@ -14,7 +14,7 @@ const emit = defineEmits<{
   save: [payload: { typeOk: boolean[]; reasonOk: boolean[]; comments: string[]; note: string }, goNext: boolean]
 }>()
 
-const TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-green']
+const TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-sand']
 
 const typeOk = reactive<(boolean | null)[]>([null, null, null, null])
 const reasonOk = reactive<(boolean | null)[]>([null, null, null, null])
@@ -53,7 +53,7 @@ function save(goNext: boolean) {
 </script>
 
 <template>
-  <section class="rounded-card border border-line/70 bg-white p-5 sm:p-6" :aria-label="`ตรวจงานของ ${submission.student_name}`">
+  <section class="card p-5 sm:p-6" :aria-label="`ตรวจงานของ ${submission.student_name}`">
     <StatusBadge :status="submission.grades ? 'graded' : 'waiting'" />
     <h2 class="mt-3 text-2xl font-extrabold">{{ submission.student_name }}</h2>
     <p class="text-ink-soft">{{ toThaiDigits(seatLabel(submission)) }} • เลขที่ {{ toThaiDigits(String(submission.student_no)) }}</p>

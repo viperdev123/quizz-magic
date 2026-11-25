@@ -97,7 +97,7 @@ function onPaste(i: number, e: ClipboardEvent) {
       />
       <!-- fixed word for this digit: read-only text, not an input -->
       <p
-        class="flex min-h-tap w-full min-w-0 items-center justify-center border-b-2 bg-cream px-2 py-2 text-center text-base"
+        class="flex min-h-tap w-full min-w-0 items-center justify-center border-b-2 bg-white/90 px-2 py-2 text-center text-base"
         :class="[
           invalid && !digits[i - 1] ? 'border-bad' : 'border-ink-soft/60',
           digits[i - 1] ? 'font-semibold text-ink' : 'text-ink-soft/85',

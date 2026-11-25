@@ -53,7 +53,7 @@ async function search() {
     <h1 class="mt-1 text-4xl font-extrabold sm:text-5xl">มาดูคะแนนกัน!</h1>
     <p class="mt-2 text-ink-soft">กรอกชั้น ห้อง และเลขที่ เพื่อดูผลและคำแนะนำจากครู</p>
 
-    <form novalidate class="mt-6 rounded-card border border-line/70 bg-white p-5 sm:p-6" @submit.prevent="search">
+    <form novalidate class="mt-6 card p-5 sm:p-6" @submit.prevent="search">
       <div class="grid items-end gap-4 sm:grid-cols-[3fr_auto]">
         <SeatFields
           v-model:level="form.level"

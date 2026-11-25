@@ -30,10 +30,11 @@ const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำ�
     >
       ข้ามไปยังเนื้อหา
     </a>
-    <header class="border-b border-line/60 bg-white">
+    <header class="border-b-2 border-gold bg-white">
+      <div aria-hidden="true" class="h-1.5 bg-primary" />
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 pt-5 sm:px-8">
         <div class="flex items-center gap-2 text-lg font-bold">
-          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-6 w-6 text-primary" fill="currentColor">
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-6 w-6 text-gold" fill="currentColor" stroke="#B8860B" stroke-width="1">
             <path d="M12 0c.8 6.6 5.4 11.2 12 12-6.6.8-11.2 5.4-12 12-.8-6.6-5.4-11.2-12-12C6.6 11.2 11.2 6.6 12 0Z" />
           </svg>
           ห้องเรียนคำนาม
@@ -52,11 +53,11 @@ const rightLabel = computed(() => (route.path.startsWith('/teacher') ? 'สำ�
       <slot />
     </main>
 
-    <footer class="bg-footer">
+    <footer class="border-t-4 border-double border-gold bg-primary-dark text-white">
       <div class="mx-auto max-w-6xl px-4 py-6 sm:px-8">
         <p class="font-bold">ลุ้นทายเลข เสกคำนาม</p>
-        <p class="text-ink-soft">กิจกรรมภาษาไทย • คำนามน่ารู้ ชั้นมัธยมศึกษาปีที่ ๑</p>
-        <RouterLink v-if="!auth.isTeacher" to="/teacher/login" class="mt-2 inline-block text-sm text-ink-soft underline">
+        <p class="text-white/85">กิจกรรมภาษาไทย • คำนามน่ารู้ ชั้นมัธยมศึกษาปีที่ ๑</p>
+        <RouterLink v-if="!auth.isTeacher" to="/teacher/login" class="mt-2 inline-block text-sm text-white/85 underline">
           สำหรับครู
         </RouterLink>
       </div>

@@ -5,19 +5,17 @@ import { toThaiDigits } from '@shared/drawn'
 import type { ScoreItem } from '@shared/schemas'
 
 defineProps<{ index: number; item: ScoreItem }>()
-const NUM_TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-green']
 </script>
 
 <template>
   <article
-    class="rounded-card border bg-white p-5"
+    class="card p-5"
     :class="item.points >= 1 ? 'border-line/70' : item.points > 0 ? 'border-star/50' : 'border-bad/50'"
   >
     <header class="flex items-start justify-between gap-3">
       <div class="flex items-center gap-3">
         <span
-          class="grid h-12 w-12 place-items-center rounded-field text-2xl font-extrabold"
-          :class="NUM_TONES[(index - 1) % 4]"
+          class="grid h-12 w-12 place-items-center rounded-field bg-primary text-2xl font-extrabold text-white"
           role="img"
           :aria-label="`เลขที่ได้ ${item.digit}`"
         >

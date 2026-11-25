@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import DiceMagic from '@/components/DiceMagic.vue'
 import DigitBoxes from '@/components/DigitBoxes.vue'
+import LottoTicket from '@/components/LottoTicket.vue'
 import ScoreResultView from '@/components/ScoreResultView.vue'
 import SeatFields from '@/components/SeatFields.vue'
 import TurnstileWidget from '@/components/TurnstileWidget.vue'
@@ -94,7 +95,7 @@ async function submit() {
       <p class="text-ink-soft">ยังมีช่องว่างอยู่ ลองตรวจดูอีกครั้งนะ</p>
     </div>
 
-    <section class="rounded-card border border-line/70 bg-white p-5 sm:p-6" aria-labelledby="who">
+    <section class="card p-5 sm:p-6" aria-labelledby="who">
       <h2 id="who" class="mb-4 text-lg font-bold">ก่อนเริ่ม มารู้จักกันหน่อย</h2>
       <div class="grid gap-4 sm:grid-cols-[2fr_3fr]">
         <label class="block">
@@ -122,13 +123,12 @@ async function submit() {
       <DiceMagic />
       <p class="mt-2 font-semibold text-primary">กิจกรรมคำนาม • ม.๑</p>
       <h1 class="mt-1 text-4xl font-extrabold sm:text-5xl">ลุ้นทายเลข เสกคำนาม</h1>
-      <p class="mt-2 text-ink-soft">ทอยเลข จับคำ แล้วอธิบายด้วยไอเดียของเรา</p>
+      <p class="mt-2 text-ink-soft">เลือกฉลาก กรอกเลข แล้วอธิบายด้วยไอเดียของเรา</p>
     </div>
 
-    <section class="rounded-card bg-tint-blue p-5 sm:p-8" aria-labelledby="drawn">
-      <h2 id="drawn" class="mb-5 text-center text-xl font-bold text-primary">เลขที่ได้</h2>
+    <LottoTicket>
       <DigitBoxes v-model:digits="form.digits" :invalid="showInvalid" />
-    </section>
+    </LottoTicket>
 
     <section aria-labelledby="magic">
       <h2 id="magic" class="text-3xl font-extrabold">เสกคำนามของเรา</h2>

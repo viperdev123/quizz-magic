@@ -16,7 +16,7 @@ function set<K extends keyof Filters>(key: K, value: Filters[K]) {
 </script>
 
 <template>
-  <section class="rounded-card border border-line/70 bg-white p-5" aria-labelledby="list-title">
+  <section class="card p-5" aria-labelledby="list-title">
     <h2 id="list-title" class="text-xl font-extrabold">งานของนักเรียน</h2>
 
     <div class="mt-4 space-y-3">

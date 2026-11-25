@@ -1,21 +1,23 @@
 import type { Config } from 'tailwindcss'
 
-// Design tokens sampled from the Figma exports in /assetWeb
+// Design tokens: a Thai lottery-ticket theme (lottery red, gold trim, warm paper)
 export default {
   content: ['./index.html', './src/**/*.{vue,ts}'],
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#1664CC', dark: '#0F4FA8' },
+        primary: { DEFAULT: '#9B1C1C', dark: '#7A1414' },
+        gold: { DEFAULT: '#E8C77A', soft: '#FFF1D0', paper: '#FFF7E6' },
         ink: { DEFAULT: '#1B1F3B', soft: '#4A5068' },
-        cream: '#FFFCF5',
-        line: '#C6CDDB',
-        panel: '#F3F4F8',
-        footer: '#F3F1EB',
+        cream: '#F4EADB',
+        line: '#D2B97E',
+        panel: '#F8EBCD',
+        footer: '#FFF1D0',
         tint: {
-          blue: '#EDF5FF',
+          blue: '#FFF4DE',
           yellow: '#FFF2C8',
-          purple: '#F1EBFF',
+          purple: '#FCEAE6', // lottery pink (name kept for existing classes)
+          sand: '#F5E9D3',
           green: '#E6F6EE',
           red: '#FDEDED',
         },
