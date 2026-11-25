@@ -1,15 +1,43 @@
+# dependencies & build output
 node_modules
 dist
-.wrangler
-.dev.vars
+coverage
+*.tsbuildinfo
+
+# secrets - NEVER commit (use .env.example / .dev.vars.example as templates)
 .env
 .env.*
 !.env.example
+.dev.vars
+.dev.vars.*
 !.dev.vars.example
 *.local
-coverage
-playwright-report
-test-results
+supabase/.env
+supabase/.env.*
+
+# Cloudflare / Supabase local state
+.wrangler
 supabase/.temp
 supabase/.branches
+
+# test reports
+playwright-report
+test-results
+.lighthouseci
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# editors / OS
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
+Thumbs.db
+
+# Claude Code local settings
+.claude/settings.local.json
+
+assetWeb
