@@ -28,3 +28,13 @@ export function assertEnv(): void {
     throw new Error('Missing Supabase env: fill .env.local and .dev.vars first')
   }
 }
+
+/** Remove test users left behind by an aborted earlier run (only @example.invalid addresses made by these tests). */
+export async function sweepTestUsers(admin: {
+  auth: { admin: { listUsers: (o: { perPage: number }) => Promise<{ data: { users: { id: string; email?: string }[] } }>; deleteUser: (id: string) => Promise<unknown> } }
+}): Promise<void> {
+  const { data } = await admin.auth.admin.listUsers({ perPage: 200 })
+  for (const u of data.users) {
+    if (u.email?.startsWith('itest-') && u.email.endsWith('@example.invalid')) await admin.auth.admin.deleteUser(u.id)
+  }
+}

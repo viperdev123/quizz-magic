@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { handleScore, type Guards } from '../../functions/_lib/handlers'
 import { createStores } from '../../functions/_lib/supabaseStore'
 import { normalizeName } from '../../shared/normalize'
-import { assertEnv, env } from './env'
+import { assertEnv, env, sweepTestUsers } from './env'
 
 // A seat that real students will never use; the suite refuses to run if it is already taken
 // so it can never touch real data, and removes only its own rows afterwards.
@@ -61,6 +61,7 @@ async function seatId(): Promise<string | null> {
 beforeAll(async () => {
   assertEnv()
   admin = createClient(env.url, env.serviceKey, opts)
+  await sweepTestUsers(admin)
   anon = createClient(env.url, env.anonKey, opts)
   const { data } = await admin.from('submissions').select('id').match(SEAT).maybeSingle()
   if (data) throw new Error('Test seat ป.1/30/99 already exists - refusing to run (would delete data)')

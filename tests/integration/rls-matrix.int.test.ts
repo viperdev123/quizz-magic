@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { assertEnv, env } from './env'
+import { assertEnv, env, sweepTestUsers } from './env'
 
 // Matrix: {anon, signed-in non-teacher} x {teachers, submissions, grades} x {select, insert, update, delete}.
 // Every attempt must fail or affect nothing, and the database must be byte-for-byte unchanged afterwards.
@@ -56,6 +56,7 @@ async function cleanup() {
 beforeAll(async () => {
   assertEnv()
   admin = createClient(env.url, env.serviceKey, opts)
+  await sweepTestUsers(admin)
   const taken = await admin.from('submissions').select('id').eq('level', 'ป.1').eq('room', 30).in('student_no', [96, 97, 98])
   if (taken.data?.length) throw new Error('Matrix test seats ป.1/30/96-98 already used - refusing to run')
 
