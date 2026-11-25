@@ -2,12 +2,12 @@ name = "lun-thai-lek"
 compatibility_date = "2025-01-01"
 pages_build_output_dir = "dist"
 
-# Rate-limit counters (best-effort, per hashed IP). Create with:
-#   wrangler kv namespace create RATE_LIMIT   -> paste the id below (do this per environment)
+# Rate-limit counters (best-effort, per hashed IP).
+# Namespace created in the Cloudflare dashboard (KV). Preview deployments share it; use a separate one if you want isolation.
 [[kv_namespaces]]
 binding = "RATE_LIMIT"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
-preview_id = "REPLACE_WITH_PREVIEW_KV_NAMESPACE_ID"
+id = "a4efe76eb3f84c9dbf085bdbcac2b94d"
+preview_id = "a4efe76eb3f84c9dbf085bdbcac2b94d"
 
 # Secrets (set with `wrangler pages secret put NAME`, never here):
 #   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, TURNSTILE_SECRET_KEY
