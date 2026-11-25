@@ -30,7 +30,7 @@ const num = computed(() => String(props.index).padStart(2, '0'))
           :aria-invalid="invalid && !word.trim() ? 'true' : undefined"
           maxlength="40"
           autocomplete="off"
-          placeholder="เขียนคำนามของฉัน"
+          placeholder="เขียนชนิดคำนาม"
           @input="$emit('update:word', ($event.target as HTMLInputElement).value)"
         />
       </label>
@@ -43,7 +43,7 @@ const num = computed(() => String(props.index).padStart(2, '0'))
           :aria-invalid="invalid && !reason.trim() ? 'true' : undefined"
           maxlength="200"
           autocomplete="off"
-          placeholder="เป็นคำนาม เพราะว่า..."
+          placeholder="เพราะว่า..."
           @input="$emit('update:reason', ($event.target as HTMLInputElement).value)"
         />
       </label>
