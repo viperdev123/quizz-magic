@@ -28,7 +28,9 @@ async function submitWorksheet(page: Page) {
   await page.goto('/submit')
   await page.getByLabel('ชื่อ-สกุล').fill(NAME)
   await fillSeat(page)
-  await page.getByRole('button', { name: 'ลองกรอกเลขตัวอย่าง' }).click()
+  // type the four digits: each box moves on to the next by itself
+  await page.getByLabel(/^เลขที่ได้ ช่องที่/).first().click()
+  await page.keyboard.type('2579')
   // the fixed words appear by themselves under the digits 2 5 7 9
   for (const w of ['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง']) await expect(page.getByText(w).first()).toBeVisible()
   // the student's own work: the noun type and the reason for each word

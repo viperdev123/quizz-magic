@@ -37,11 +37,6 @@ const emptyField = computed(
     form.words.some((w) => !w.word.trim() || !w.reason.trim()),
 )
 
-function fillExample() {
-  // Only the digits: the words are fixed per digit, and the answers (noun type + reason) are the student's own work.
-  form.digits = ['2', '5', '7', '9']
-}
-
 async function submit() {
   serverError.value = ''
   const parsed = SubmitReqSchema.safeParse({
@@ -132,9 +127,6 @@ async function submit() {
           :invalid="showInvalid"
         />
       </div>
-      <button type="button" class="btn-outline mt-4 w-full sm:w-auto" @click="fillExample">
-        ลองกรอกเลขตัวอย่าง
-      </button>
     </section>
 
     <div class="text-center">
