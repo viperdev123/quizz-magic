@@ -92,6 +92,10 @@ pnpm pages:dev                    # build + wrangler pages dev (หน้าเ�
 | `pnpm test` | unit tests (ไม่แตะอินเทอร์เน็ต) |
 | `pnpm test:int` | **ทดสอบกับ Supabase จริง** (RLS, สิทธิ์, กฎธุรกิจ) สร้างข้อมูลทดลองที่ ป.1/30/96–99 และผู้ใช้ `itest-…@example.invalid` แล้วลบทิ้ง ไม่รันใน CI |
 | `pnpm seed:demo` | ข้อมูลตัวอย่าง (เฉพาะ local) |
+| `pnpm test:e2e` | **Playwright e2e** บนเบราว์เซอร์จริง (ส่งงาน → ครูตรวจ → ดูคะแนน, ล็อกหลังตรวจ, CSV, axe, มือถือ) ใช้ Supabase จริง สร้างข้อมูลที่ ป.1/30/90–95 และครูทดลอง แล้วลบทิ้ง ต้องรัน `pnpm exec playwright install chromium` ก่อนครั้งแรก |
+| `pnpm lighthouse` | Lighthouse มือถือหน้า `/submit` และ `/score` (ต้องเปิด `wrangler pages dev` ไว้ และตั้ง `CHROME_PATH`) ล้มถ้ามีรอบใดต่ำกว่า 0.9 |
+
+> **wrangler ต้องใช้ Node 22.12 ขึ้นไป** (`pnpm pages:dev`, e2e, Lighthouse) ส่วน unit tests ทำงานบน Node 20 ได้ หากเครื่องมี Node 20 เป็นค่าเริ่มต้น ให้สลับด้วย `nvm use 22` หรือเรียก `node` เวอร์ชัน 22 ตรง ๆ กับ `node_modules/wrangler/bin/wrangler.js`
 
 ---
 
@@ -145,7 +149,9 @@ pnpm pages:dev                    # build + wrangler pages dev (หน้าเ�
 ---
 
 ## 8. สถานะและข้อจำกัดที่ทราบ
-- ทดสอบอัตโนมัติ: unit tests (`pnpm test`) และทดสอบกับ Supabase จริง (`pnpm test:int`: RLS, สิทธิ์ทุกบทบาท, กฎข้อ 2–4, `/api/score`)
-- ยังไม่ผ่านการทดสอบบนเบราว์เซอร์จริง/Lighthouse/Playwright (ดูหมายเหตุท้ายรายงาน Phase 4)
+- ทดสอบอัตโนมัติ: unit tests (`pnpm test`), ทดสอบกับ Supabase จริง (`pnpm test:int`: RLS ทุกบทบาท/ทุกการกระทำ, กฎข้อ 2–4, `/api/score`) และ e2e บนเบราว์เซอร์จริง (`pnpm test:e2e`: 11 ข้อ รวม axe WCAG A/AA)
+- Lighthouse มือถือ (วัดกับ wrangler ในเครื่อง): `/submit` และ `/score` ได้ประสิทธิภาพ 0.99, การเข้าถึง 100, CLS 0 — ตัวเลขบนโดเมนจริงอาจต่างเล็กน้อย
+- ยังไม่ได้ทดสอบ: Realtime กับผู้ใช้หลายหน้าต่างจริง, Turnstile ด้วยคีย์จริง (e2e ใช้คีย์ทดสอบของ Cloudflare), อุปกรณ์มือถือจริง/Safari/Firefox (e2e ใช้ Chromium)
+- ต้นทุนของการโหลดสคริปต์ Turnstile ถูกนับใน Lighthouse เมื่อใช้คีย์จริงอาจต่างจากคีย์ทดสอบ
 - Realtime ที่ไม่ส่งข้อมูลให้ผู้ที่ไม่ใช่ครู เป็นกลไกของแพลตฟอร์ม Supabase ที่ชุดทดสอบนี้ไม่ได้พิสูจน์
 - ตัวจำกัดอัตรา KV เป็นแบบประมาณ และโรงเรียนที่ใช้ IP ร่วมกัน (NAT) อาจโดนจำกัดพร้อมกัน — ปรับค่าใน `functions/_lib/handlers.ts` (`LIMITS_PER_ROUTE`)
