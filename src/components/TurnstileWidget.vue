@@ -60,5 +60,5 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="host" class="min-h-[65px]" aria-label="ตรวจสอบว่าไม่ใช่โปรแกรมอัตโนมัติ"></div>
+  <div ref="host" role="group" class="min-h-[65px]" aria-label="ตรวจสอบว่าไม่ใช่โปรแกรมอัตโนมัติ"></div>
 </template>

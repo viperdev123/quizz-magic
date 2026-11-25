@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import ScoreView from '@/views/ScoreView.vue'
+import SubmitView from '@/views/SubmitView.vue'
 import { useAuthStore } from '@/stores/auth'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', redirect: '/submit' },
-    { path: '/submit', name: 'submit', component: () => import('@/views/SubmitView.vue') },
-    { path: '/score', name: 'score', component: () => import('@/views/ScoreView.vue') },
+    { path: '/submit', name: 'submit', component: SubmitView },
+    { path: '/score', name: 'score', component: ScoreView },
     {
       path: '/teacher/login',
       name: 'teacher-login',

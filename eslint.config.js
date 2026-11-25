@@ -4,7 +4,7 @@ import vue from 'eslint-plugin-vue'
 import globals from 'globals'
 
 export default tseslint.config(
-  { ignores: ['dist', '.wrangler', 'node_modules', 'assetWeb', 'coverage'] },
+  { ignores: ['dist', '.wrangler', 'node_modules', 'assetWeb', 'coverage', 'playwright-report', 'test-results'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...vue.configs['flat/recommended'],

@@ -8,13 +8,20 @@
     ],
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ]
   },
   "include": [
     "vite.config.ts",
     "tailwind.config.ts",
     "eslint.config.js",
     "vitest.integration.config.ts",
-    "tests/integration/**/*.ts"
+    "tests/integration/**/*.ts",
+    "playwright.config.ts",
+    "e2e/**/*.ts"
   ]
 }
