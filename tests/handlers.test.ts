@@ -198,3 +198,18 @@ describe('verifyTurnstile', () => {
     expect(await verifyTurnstile('t', 's', null, boom)).toBe(false)
   })
 })
+
+describe('serve() never leaks platform errors', () => {
+  it('returns a generic Thai JSON 500 when configuration is missing (e.g. secrets not set)', async () => {
+    const { serve } = await import('../functions/_lib/serve')
+    const kv = { get: async () => null, put: async () => undefined }
+    const res = await serve(
+      new Request('https://example.test/api/score', { method: 'POST', body: JSON.stringify({ level: 'ป.1', room: 1, studentNo: 1, turnstileToken: 't' }) }),
+      { RATE_LIMIT: kv, SUPABASE_URL: '', SUPABASE_SERVICE_ROLE_KEY: '', TURNSTILE_SECRET_KEY: '' } as never,
+      'score',
+    )
+    expect(res.status).toBe(500)
+    expect(res.headers.get('content-type')).toContain('application/json')
+    expect(await res.json()).toEqual({ ok: false, code: 'ERROR', message: MESSAGES.error })
+  })
+})

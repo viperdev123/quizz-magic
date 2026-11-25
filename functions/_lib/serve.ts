@@ -1,3 +1,4 @@
+import { MESSAGES } from '../../shared/constants'
 import type { Env } from './env'
 import { handleScore, handleSubmit, type Guards } from './handlers'
 import { checkRateLimit } from './ratelimit'
@@ -13,7 +14,16 @@ function json(status: number, body: unknown): Response {
   })
 }
 
+/** Never let an unexpected error reach the client as a platform error page (and never echo its details). */
 export async function serve(request: Request, env: Env, kind: 'submit' | 'score'): Promise<Response> {
+  try {
+    return await run(request, env, kind)
+  } catch {
+    return json(500, { ok: false, code: 'ERROR', message: MESSAGES.error })
+  }
+}
+
+async function run(request: Request, env: Env, kind: 'submit' | 'score'): Promise<Response> {
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown'
 
   let body: unknown = null
