@@ -11,7 +11,7 @@
 @layer components {
   .field {
     @apply min-h-tap w-full rounded-field border border-line bg-white px-4 py-2 text-base text-ink
-      placeholder:text-ink-soft/70 focus:border-primary;
+      placeholder:text-ink-soft/85 focus:border-primary;
   }
   .btn {
     @apply inline-flex min-h-tap min-w-tap items-center justify-center gap-2 rounded-field px-6 py-2

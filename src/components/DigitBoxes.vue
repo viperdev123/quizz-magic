@@ -88,7 +88,7 @@ function setNoun(i: number, v: string) {
         :aria-label="`คำนามที่สุ่มได้ ใต้เลขช่องที่ ${i}`"
         :aria-invalid="invalid && !nouns[i - 1]?.trim() ? 'true' : undefined"
         placeholder="คำนามที่สุ่มได้"
-        class="min-h-tap w-full min-w-0 border-0 border-b-2 bg-cream px-2 py-2 text-center text-base text-ink placeholder:text-ink-soft/70"
+        class="min-h-tap w-full min-w-0 border-0 border-b-2 bg-cream px-2 py-2 text-center text-base text-ink placeholder:text-ink-soft/85"
         :class="invalid && !nouns[i - 1]?.trim() ? 'border-bad' : 'border-ink-soft/60'"
         @input="setNoun(i - 1, ($event.target as HTMLInputElement).value)"
       />
