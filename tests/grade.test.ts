@@ -21,7 +21,7 @@ describe('detectTypes (which noun type did the student name?)', () => {
     expect([...detectTypes('สามานย์นาม')]).toEqual(['common']) // thanthakhat is ignored
   })
   it('tolerates a single typo but not a vague guess', () => {
-    expect([...detectTypes('วิสามานยนา')]).toEqual(['proper']) // missing last letter
+    expect([...detectTypes('วิสามนยนาม')]).toEqual(['proper']) // missing last letter
     expect([...detectTypes('นามอะไรสักอย่าง')]).toEqual([])
     expect([...detectTypes('นาม')]).toEqual([])
   })
@@ -94,5 +94,17 @@ describe('gradeWorksheet', () => {
   it('totals in half-point steps', () => {
     const mixed = [good[0]!, { word: 'อาการนาม', reason: 'ไม่รู้' }, { word: 'สามานยนาม', reason: 'ชื่อเฉพาะ' }, { word: '', reason: '' }]
     expect(gradeWorksheet([0, 1, 2, 3], mixed, reveal).total).toBe(2) // 1 + 0.5 + 0.5 + 0
+  })
+})
+
+describe('a typo must never flip the meaning', () => {
+  it('does not read "เจาะจง" (specific) as "ไม่เจาะจง" (not specific)', () => {
+    expect([...detectTypes('เจาะจง')]).not.toContain('common')
+    expect([...detectTypes('ไม่เจาะจง')]).toEqual(['common'])
+    expect(gradeWord(4, { word: 'นามเฉพาะ', reason: 'เจาะจง' }, reveal).points).toBe(0)
+  })
+  it('does not forgive typos inside long free text (only the short type box)', () => {
+    expect([...detectTypes('ขอบคุณครับ '.repeat(12) + 'วิสามนยนาม')]).toEqual([]) // long text: no typo-forgiveness
+    expect([...detectTypes('วิสามนยนาม')]).toEqual(['proper']) // the same slip in the short type box is forgiven
   })
 })
