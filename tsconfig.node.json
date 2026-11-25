@@ -3,10 +3,18 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["vite.config.ts", "tailwind.config.ts", "eslint.config.js"]
+  "include": [
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "eslint.config.js",
+    "vitest.integration.config.ts",
+    "tests/integration/**/*.ts"
+  ]
 }
