@@ -1,0 +1,4 @@
+# Copy to .dev.vars (git-ignored) for `wrangler pages dev`. SECRETS - never commit.
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_SERVICE_ROLE_KEY=<service_role key from `supabase status`>
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA   # Cloudflare test secret (always passes)
