@@ -137,11 +137,27 @@ const SUITES: Record<string, Row[]> = {
     [7, 'สามานยนาม', 'เพราะเป็นรถ', 0, 'wrong on both'],
   ],
 
-  '8 การเมือง (อาการนาม, ร่าง)': [
-    [8, 'อาการนาม', 'มีคำว่าการนำหน้า', 1, 'the การ clue'],
-    [8, 'อาการนาม', 'เกี่ยวกับการปกครองบ้านเมือง', 1, 'by meaning'],
-    [8, 'อาการนาม', 'การเมืองคือการเมือง', 0.5, 'circular'],
-    [8, 'สามานยนาม', 'เป็นชื่อเรียกทั่วไป', 0, 'wrong on both'],
+  '8 การเมือง (สามานยนาม)': [
+    [8, 'สามานยนาม', 'เป็นชื่อเรียกเรื่องทั่วไป', 1, 'textbook'],
+    [8, 'สามานยนาม', 'ไม่เจาะจง', 1, 'not specific'],
+    [8, 'สามัญนาม', 'ทั่วไป', 1, 'alternative name'],
+    [8, 'นามทั่วไป', 'เรียกได้ทุกเรื่องที่เกี่ยวกับบ้านเมือง', 1, 'by what it is about'],
+    [8, 'สามานยนาม', 'เป็นเรื่องของการปกครอง', 1, 'by meaning'],
+    [8, 'อาการนาม', 'มีคำว่าการนำหน้า', 0, 'THE TRAP: starts with การ, but the teacher key is สามานยนาม'],
+    [8, 'อาการนาม', 'เกิดจากคำกริยา', 0, 'the same trap, other wording'],
+    [8, 'วิสามานยนาม', 'เป็นชื่อเฉพาะ', 0, 'wrong on both'],
+    [8, 'สามานยนาม', 'เพราะเป็นชื่อเฉพาะ', 0.5, 'right type, contradicting reason'],
+    [8, 'สามานยนาม', 'การเมืองคือการเมือง', 0.5, 'circular'],
+  ],
+
+  '9 อกร่อง (สามานยนาม)': [
+    [9, 'สามานยนาม', 'เป็นชื่อเรียกทั่วไป', 1, 'textbook'],
+    [9, 'สามัญนาม', 'ไม่เจาะจง', 1, 'alternative name, not specific'],
+    [9, 'สามานยนาม', 'เป็นส่วนของร่างกาย', 1, 'by what it is'],
+    [9, 'สามานยนาม', 'อกร่อง', 0.5, 'circular'],
+    [9, 'สามานยนาม', 'ไม่รู้', 0.5, 'no reason'],
+    [9, 'อาการนาม', 'เกิดจากคำกริยา', 0, 'wrong on both'],
+    [9, 'วิสามานยนาม', 'เป็นชื่อเฉพาะ', 0, 'wrong on both'],
   ],
 }
 
@@ -158,7 +174,7 @@ describe('robustness', () => {
   })
   it('always returns 0, 0.5 or 1', () => {
     const junk = ['', ' ', '???', '555555', 'ก'.repeat(200), 'ไม่ ไม่ ไม่ ไม่ ไม่', '🙂🙂🙂', '<script>alert(1)</script>', 'null', 'undefined']
-    for (const digit of [0, 1, 2, 3, 4, 5, 6, 7, 8])
+    for (const digit of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
       for (const w of junk)
         for (const r of junk) expect([0, 0.5, 1]).toContain(gradeWord(digit, { word: w, reason: r }, { reveal: false }).points)
   })
@@ -167,8 +183,9 @@ describe('robustness', () => {
     for (let i = 0; i < 20; i++) gradeWord(2, { word: 'ก'.repeat(40), reason: 'ขอบคุณครับ '.repeat(20) }, { reveal: true })
     expect(performance.now() - t0).toBeLessThan(400)
   })
-  it('refuses a word that has no answer key (digit 9) instead of guessing', () => {
-    expect(() => gradeWord(9, { word: 'สามานยนาม', reason: 'ทั่วไป' }, { reveal: true })).toThrow(MissingAnswerKeyError)
+  it('has an answer key for every digit 0-9, and refuses anything else instead of guessing', () => {
+    for (let d = 0; d <= 9; d++) expect(() => gradeWord(d, { word: '', reason: '' }, { reveal: true })).not.toThrow()
+    expect(() => gradeWord(10, { word: 'สามานยนาม', reason: 'ทั่วไป' }, { reveal: true })).toThrow(MissingAnswerKeyError)
   })
   it('a perfect worksheet is 4 and an empty one is 0', () => {
     const perfect = [

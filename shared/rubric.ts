@@ -1,6 +1,7 @@
 // Answer key + scoring rubric for the auto-grader.
 //
-// STATUS: DRAFT. Written by the developer from general Thai grammar; the teacher must confirm or replace it.
+// STATUS: the ANSWER KEY (which type each digit is) is confirmed by the teacher for all ten words. The keyword
+// lists are still a DRAFT written by the developer from general Thai grammar and should be reviewed.
 // Each word is worth 1 point = 0.5 (the noun type is right) + 0.5 (the reason shows the idea, i.e. contains
 // rubric keywords). Everything here is matched LOOSELY (see shared/grade.ts): spaces, tone marks, punctuation,
 // ๆ and stretched letters are ignored, and a keyword that is negated ("ไม่", "ไม่ใช่", "ไม่ได้") does not count.
@@ -164,10 +165,10 @@ export const DIGIT_RUBRIC: readonly DigitRubric[] = [
   { type: 'abstract', extraKeywords: ['การกระทำ', 'ท่าทาง'] },
   // 7 รถคันที่สาม
   { type: 'classifier', extraKeywords: ['คัน', 'คำว่าคัน'] },
-  // 8 การเมือง   <- TO CONFIRM with the teacher (draft: อาการนาม)
-  { type: 'abstract', extraKeywords: ['ปกครอง', 'บริหารประเทศ', 'บ้านเมือง', 'เรื่องของบ้านเมือง', 'รัฐบาล'] },
-  // 9 อกร่อง     <- NO ANSWER KEY YET
-  { type: null },
+  // 8 การเมือง: สามานยนาม (confirmed by the teacher). It starts with การ, but it is NOT อาการนาม: a classic trap.
+  { type: 'common', extraKeywords: ['เรื่อง', 'ปกครอง', 'บ้านเมือง', 'บริหารประเทศ', 'รัฐบาล', 'กิจกรรม', 'สิ่งหนึ่ง'] },
+  // 9 อกร่อง: สามานยนาม (confirmed by the teacher)
+  { type: 'common', extraKeywords: ['ร่างกาย', 'อวัยวะ', 'ส่วนของร่างกาย', 'ส่วนหนึ่ง'] },
 ]
 
 export const RUBRIC_STATUS: 'draft' | 'confirmed' = 'draft'

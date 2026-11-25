@@ -76,8 +76,8 @@ describe('gradeWord: 0.5 for the type + 0.5 for the reason', () => {
     expect(shown).toContain('อาการนาม')
     expect(hidden).not.toContain('อาการนาม')
   })
-  it('refuses to score a word that has no answer key yet', () => {
-    expect(() => gradeWord(9, { word: 'สามานยนาม', reason: 'ทั่วไป' }, reveal)).toThrow(MissingAnswerKeyError)
+  it('refuses to score a digit that has no answer key', () => {
+    expect(() => gradeWord(10, { word: 'สามานยนาม', reason: 'ทั่วไป' }, reveal)).toThrow(MissingAnswerKeyError)
   })
 })
 
