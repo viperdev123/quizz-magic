@@ -42,6 +42,19 @@ describe('POST /api/submit', () => {
     })
   })
 
+  it('stores the fixed word for each digit and ignores any noun text sent by the client', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    await handleSubmit({ ...submitBody, digits: [3, 7, 0, 9], drawnNouns: ['<script>', 'x', 'y', 'z'] }, okGuards, { submit })
+    expect(submit.mock.calls[0]![0].drawnNouns).toEqual(['หนังสือ ๑ เล่ม', 'รถคันที่สาม', 'มะนาว', 'อกร่อง'])
+  })
+
+  it('does not require the client to send nouns at all', async () => {
+    const { drawnNouns: _omit, ...withoutNouns } = submitBody
+    void _omit
+    const res = await handleSubmit(withoutNouns, okGuards, { submit: vi.fn().mockResolvedValue('ok') })
+    expect(res.status).toBe(200)
+  })
+
   it('rejects resubmission after grading with the locked message (rule 2)', async () => {
     const store: SubmitStore = { submit: async () => 'locked' }
     const res = await handleSubmit(submitBody, okGuards, store)

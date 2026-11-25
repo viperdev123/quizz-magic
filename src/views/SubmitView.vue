@@ -7,6 +7,7 @@ import TurnstileWidget from '@/components/TurnstileWidget.vue'
 import WordCard from '@/components/WordCard.vue'
 import { submitWorksheet } from '@/lib/api'
 import { MESSAGES } from '@shared/constants'
+import { toThaiDigits } from '@shared/drawn'
 import { SubmitReqSchema } from '@shared/schemas'
 
 const blankWords = () => Array.from({ length: 4 }, () => ({ word: '', reason: '' }))
@@ -17,7 +18,6 @@ const form = reactive({
   room: '',
   studentNo: '',
   digits: ['', '', '', ''],
-  nouns: ['', '', '', ''],
   words: blankWords(),
 })
 const token = ref('')
@@ -33,19 +33,12 @@ const emptyField = computed(
     !form.room ||
     !form.studentNo ||
     form.digits.some((d) => d === '') ||
-    form.nouns.some((n) => !n.trim()) ||
     form.words.some((w) => !w.word.trim() || !w.reason.trim()),
 )
 
 function fillExample() {
+  // Only the digits: the words are fixed per digit, and the answers (noun type + reason) are the student's own work.
   form.digits = ['2', '5', '7', '9']
-  form.nouns = ['แมว', 'โรงเรียน', 'ดินสอ', 'ความสุข']
-  form.words = [
-    { word: 'แมว', reason: 'ใช้เรียกชื่อสัตว์' },
-    { word: 'โรงเรียน', reason: 'ใช้เรียกชื่อสถานที่' },
-    { word: 'ดินสอ', reason: 'ใช้เรียกชื่อสิ่งของ' },
-    { word: 'วิ่ง', reason: 'เป็นการกระทำของคน' },
-  ]
 }
 
 async function submit() {
@@ -56,7 +49,6 @@ async function submit() {
     room: Number(form.room),
     studentNo: Number(form.studentNo),
     digits: form.digits.map(Number),
-    drawnNouns: form.nouns,
     words: form.words,
     turnstileToken: token.value || 'pending',
   })
@@ -102,7 +94,7 @@ async function submit() {
     <p class="mt-4 text-ink-soft">
       {{ done.name }} • {{ done.level }}/{{ done.room }} • เลขที่ {{ done.studentNo }}
     </p>
-    <p class="mt-3 font-bold text-ok">ส่งแล้ว 4 คำ · เลขที่ได้ {{ done.digits.join(' ') }}</p>
+    <p class="mt-3 font-bold text-ok">ส่งแล้ว 4 คำ · เลขที่ได้ {{ toThaiDigits(done.digits.join(' ')) }}</p>
     <RouterLink to="/score" class="btn-primary mt-6 w-full sm:w-auto">ดูคะแนน</RouterLink>
   </section>
 
@@ -140,7 +132,7 @@ async function submit() {
         />
       </div>
       <button type="button" class="btn-outline mt-4 w-full sm:w-auto" @click="fillExample">
-        ลองกรอกคำตอบตัวอย่าง
+        ลองกรอกเลขตัวอย่าง
       </button>
     </section>
 
@@ -153,7 +145,7 @@ async function submit() {
 
     <section class="rounded-card bg-tint-blue p-5 sm:p-8" aria-labelledby="drawn">
       <h2 id="drawn" class="mb-5 text-center text-xl font-bold text-primary">เลขที่ได้</h2>
-      <DigitBoxes v-model:digits="form.digits" v-model:nouns="form.nouns" :invalid="showInvalid" />
+      <DigitBoxes v-model:digits="form.digits" :invalid="showInvalid" />
     </section>
 
     <section aria-labelledby="magic">

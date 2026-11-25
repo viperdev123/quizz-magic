@@ -17,7 +17,8 @@ export const SubmitReqSchema = z.object({
   room,
   studentNo,
   digits: z.tuple([digit, digit, digit, digit]),
-  drawnNouns: z.tuple([noun, noun, noun, noun]),
+  /** Deprecated: ignored. The server derives the noun from each digit (shared/drawn.ts). */
+  drawnNouns: z.tuple([noun, noun, noun, noun]).optional(),
   words: z.tuple([wordItem, wordItem, wordItem, wordItem]),
   turnstileToken: z.string().min(1),
 })

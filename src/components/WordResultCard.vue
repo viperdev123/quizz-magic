@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import NounText from './NounText.vue'
+import { toThaiDigits } from '@shared/drawn'
 import type { ScoreItem } from '@shared/schemas'
 
 defineProps<{ index: number; item: ScoreItem }>()
@@ -17,11 +19,11 @@ const NUM_TONES = ['bg-tint-blue', 'bg-tint-yellow', 'bg-tint-purple', 'bg-tint-
           :class="NUM_TONES[(index - 1) % 4]"
           :aria-label="`เลขที่ได้ ${item.digit}`"
         >
-          {{ item.digit }}
+          {{ toThaiDigits(String(item.digit)) }}
         </span>
         <div>
           <p class="text-ink-soft">คำที่ {{ index }}</p>
-          <p class="font-semibold">คำนามที่สุ่มได้: {{ item.drawnNoun }}</p>
+          <p class="font-semibold">คำนามที่สุ่มได้: <NounText :text="item.drawnNoun" /></p>
         </div>
       </div>
       <p class="whitespace-nowrap text-xl font-bold" :class="item.correct ? 'text-ok' : 'text-bad'">

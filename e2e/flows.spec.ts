@@ -28,7 +28,15 @@ async function submitWorksheet(page: Page) {
   await page.goto('/submit')
   await page.getByLabel('ชื่อ-สกุล').fill(NAME)
   await fillSeat(page)
-  await page.getByRole('button', { name: 'ลองกรอกคำตอบตัวอย่าง' }).click()
+  await page.getByRole('button', { name: 'ลองกรอกเลขตัวอย่าง' }).click()
+  // the fixed words appear by themselves under the digits 2 5 7 9
+  for (const w of ['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง']) await expect(page.getByText(w).first()).toBeVisible()
+  // the student's own work: the noun type and the reason for each word
+  const types = ['วิสามานยนาม', 'วิสามานยนาม', 'ลักษณนาม', 'สามานยนาม']
+  for (let i = 0; i < 4; i++) {
+    await page.getByLabel(`คำที่ ${i + 1} :`, { exact: true }).fill(types[i]!)
+    await page.getByPlaceholder('เพราะว่า...').nth(i).fill('เหตุผลทดสอบ')
+  }
   await waitForTurnstile(page)
   await page.getByRole('button', { name: /ส่งคำตอบ/ }).click()
 }
@@ -49,9 +57,12 @@ async function lookupScore(page: Page) {
 test('flow 1: student submits a worksheet', async ({ page }) => {
   await submitWorksheet(page)
   await expect(page.getByRole('heading', { name: 'ส่งคำตอบเรียบร้อย!' })).toBeVisible()
-  await expect(page.getByText('ส่งแล้ว 4 คำ · เลขที่ได้ 2 5 7 9')).toBeVisible()
-  const { data } = await t.admin.from('submissions').select('student_name, words').match(SEAT).single()
-  expect((data as { student_name: string }).student_name).toBe(NAME)
+  await expect(page.getByText('ส่งแล้ว 4 คำ · เลขที่ได้ ๒ ๕ ๗ ๙')).toBeVisible()
+  const { data } = await t.admin.from('submissions').select('student_name, digits, drawn_nouns').match(SEAT).single()
+  const row = data as { student_name: string; digits: number[]; drawn_nouns: string[] }
+  expect(row.student_name).toBe(NAME)
+  expect(row.digits).toEqual([2, 5, 7, 9])
+  expect(row.drawn_nouns).toEqual(['สุนทรภู่', 'เชียงใหม่', 'รถคันที่สาม', 'อกร่อง']) // derived by the server from the digits
 })
 
 test('student sees "waiting for teacher" before grading', async ({ page }) => {

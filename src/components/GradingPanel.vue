@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import MarkToggle from './MarkToggle.vue'
+import NounText from './NounText.vue'
 import StatusBadge from './StatusBadge.vue'
 import { formatThaiDateTime } from '@/lib/format'
+import { toThaiDigits } from '@shared/drawn'
 import { seatLabel, type SubmissionRow } from '@/lib/teacher'
 
 const props = defineProps<{ submission: SubmissionRow; saving?: boolean; error?: string }>()
@@ -58,14 +60,14 @@ function save(goNext: boolean) {
         :key="i"
         class="grid h-14 w-12 place-items-center rounded-field border-2 border-primary/40 text-2xl font-extrabold text-primary"
       >
-        {{ d }}
+        {{ toThaiDigits(String(d)) }}
       </li>
     </ul>
 
     <div class="mt-5 space-y-4">
       <article v-for="(w, i) in submission.words" :key="i" class="rounded-card p-4 sm:p-5" :class="TONES[i % 4]">
-        <p class="font-bold">คำที่ {{ i + 1 }} · เลข {{ submission.digits[i] }}</p>
-        <p class="text-ink-soft">คำนามที่สุ่มได้: {{ submission.drawn_nouns[i] }}</p>
+        <p class="font-bold">คำที่ {{ i + 1 }} · เลข {{ toThaiDigits(String(submission.digits[i])) }}</p>
+        <p class="text-ink-soft">คำนามที่สุ่มได้: <NounText :text="submission.drawn_nouns[i] ?? ''" /></p>
         <p class="mt-2 text-2xl font-extrabold">{{ w.word }}</p>
         <p class="mt-2">เพราะ {{ w.reason }}</p>
         <div class="mt-3 space-y-3">

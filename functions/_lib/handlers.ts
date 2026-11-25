@@ -1,6 +1,7 @@
 // Pure request handlers: no Cloudflare globals, all I/O injected, so they are unit-testable.
 // NEVER log request bodies or results here (student data).
 import { MESSAGES } from '../../shared/constants'
+import { drawnNounFor } from '../../shared/drawn'
 import { normalizeName } from '../../shared/normalize'
 import {
   ScoreReqSchema,
@@ -95,7 +96,8 @@ export async function handleSubmit(
       name: req.name,
       nameNorm: normalizeName(req.name),
       digits: req.digits,
-      drawnNouns: req.drawnNouns,
+      // never trust client text: the stored noun is always the one tied to the digit
+      drawnNouns: req.digits.map((d) => drawnNounFor(d)),
       words: req.words,
     })
     if (outcome === 'locked') return fail('LOCKED')

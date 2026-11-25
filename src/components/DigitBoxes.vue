@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { nextTick, ref } from 'vue'
+import NounText from './NounText.vue'
+import { drawnNounFor, toArabicDigits, toThaiDigits } from '@shared/drawn'
 
-// Four digit boxes, each with the drawn noun underneath (design: "เลขที่ได้").
+// Four digit boxes (design: "เลขที่ได้"). Each digit fills in its fixed, read-only word underneath.
+// Digits are shown in Thai numerals, but Thai or Arabic digits are accepted and stored as Arabic.
 // Auto-advance on input, Backspace on an empty box goes back, paste of 4 digits fills all boxes.
-const props = defineProps<{ digits: string[]; nouns: string[]; invalid?: boolean }>()
-const emit = defineEmits<{ 'update:digits': [string[]]; 'update:nouns': [string[]] }>()
+const props = defineProps<{ digits: string[]; invalid?: boolean }>()
+const emit = defineEmits<{ 'update:digits': [string[]] }>()
 
 const digitEls = ref<(HTMLInputElement | null)[]>([])
 
@@ -19,10 +22,12 @@ async function focusBox(i: number) {
   digitEls.value[i]?.select()
 }
 
+const onlyDigits = (s: string) => toArabicDigits(s).replace(/\D/g, '')
+
 function onInput(i: number, e: Event) {
   const el = e.target as HTMLInputElement
-  const d = el.value.replace(/\D/g, '').slice(-1)
-  el.value = d
+  const d = onlyDigits(el.value).slice(-1)
+  el.value = toThaiDigits(d) // keep what is shown in Thai numerals
   setDigit(i, d)
   if (d && i < 3) void focusBox(i + 1)
 }
@@ -42,8 +47,7 @@ function onKeydown(i: number, e: KeyboardEvent) {
 }
 
 function onPaste(i: number, e: ClipboardEvent) {
-  const text = e.clipboardData?.getData('text') ?? ''
-  const pasted = text.replace(/\D/g, '')
+  const pasted = onlyDigits(e.clipboardData?.getData('text') ?? '')
   if (!pasted) return
   e.preventDefault()
   const next = [...props.digits]
@@ -52,12 +56,6 @@ function onPaste(i: number, e: ClipboardEvent) {
   emit('update:digits', next)
   void focusBox(Math.min(start + pasted.length, 3))
 }
-
-function setNoun(i: number, v: string) {
-  const next = [...props.nouns]
-  next[i] = v
-  emit('update:nouns', next)
-}
 </script>
 
 <template>
@@ -65,7 +63,7 @@ function setNoun(i: number, v: string) {
     <div v-for="i in 4" :key="i" class="flex min-w-0 flex-col items-center gap-3">
       <input
         :ref="(el) => (digitEls[i - 1] = el as HTMLInputElement | null)"
-        :value="digits[i - 1]"
+        :value="toThaiDigits(digits[i - 1] ?? '')"
         type="text"
         inputmode="numeric"
         autocomplete="off"
@@ -80,18 +78,18 @@ function setNoun(i: number, v: string) {
         @paste="onPaste(i - 1, $event)"
         @focus="($event.target as HTMLInputElement).select()"
       />
-      <input
-        :value="nouns[i - 1]"
-        type="text"
-        maxlength="40"
-        autocomplete="off"
-        :aria-label="`คำนามที่สุ่มได้ ใต้เลขช่องที่ ${i}`"
-        :aria-invalid="invalid && !nouns[i - 1]?.trim() ? 'true' : undefined"
-        placeholder="คำนามที่สุ่มได้"
-        class="min-h-tap w-full min-w-0 border-0 border-b-2 bg-cream px-2 py-2 text-center text-base text-ink placeholder:text-ink-soft/85"
-        :class="invalid && !nouns[i - 1]?.trim() ? 'border-bad' : 'border-ink-soft/60'"
-        @input="setNoun(i - 1, ($event.target as HTMLInputElement).value)"
-      />
+      <!-- fixed word for this digit: read-only text, not an input -->
+      <p
+        class="flex min-h-tap w-full min-w-0 items-center justify-center border-b-2 bg-cream px-2 py-2 text-center text-base"
+        :class="[
+          invalid && !digits[i - 1] ? 'border-bad' : 'border-ink-soft/60',
+          digits[i - 1] ? 'font-semibold text-ink' : 'text-ink-soft/85',
+        ]"
+      >
+        <span class="sr-only">คำนามที่สุ่มได้ใต้เลขช่องที่ {{ i }}: </span>
+        <NounText v-if="digits[i - 1]" :text="drawnNounFor(digits[i - 1]!)" />
+        <template v-else>คำนามที่สุ่มได้</template>
+      </p>
     </div>
   </div>
 </template>
