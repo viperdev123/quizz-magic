@@ -41,3 +41,5 @@ Thumbs.db
 .claude/settings.local.json
 
 assetWeb
+# vitest cache
+.vitest
