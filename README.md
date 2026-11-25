@@ -40,6 +40,10 @@
 | `TURNSTILE_SECRET_KEY` | **ลับ** | Pages Functions เท่านั้น | |
 
 ในเครื่อง: `.env.local` (สาธารณะ) และ `.dev.vars` (ลับ) ทั้งคู่ถูก gitignore คัดลอกจาก `.env.example` / `.dev.vars.example`
+
+**บน Cloudflare Pages:** เพราะมี `wrangler.toml` แดชบอร์ดตั้งได้เฉพาะ *Secret* จึงตั้งตัวแปร build (`VITE_*`) ในแดชบอร์ดไม่ได้ ค่าสาธารณะ 3 ตัวจึงเก็บใน **`.env.production`** (commit ได้ — **ห้ามใส่ secret**) และ `pnpm build` จะ **ล้มพร้อมบอกชื่อตัวแปร** ถ้าขาดตัวใดตัวหนึ่ง ส่วน secrets ฝั่ง Functions (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `TURNSTILE_SECRET_KEY`) ยังตั้งเป็น Secret ในแดชบอร์ดตามเดิม
+
+สคริปต์ `pnpm build:e2e` (ใช้โดย `pages:dev` และ `test:e2e`) build ด้วย `.env.local` (คีย์ Turnstile ทดสอบ) ไม่ใช่ `.env.production`
 Turnstile คีย์ทดสอบของ Cloudflare (ผ่านทุกครั้ง) มีอยู่ในไฟล์ตัวอย่าง ใช้ได้เฉพาะตอนพัฒนา
 
 ---
