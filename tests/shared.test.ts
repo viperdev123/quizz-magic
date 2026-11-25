@@ -37,6 +37,7 @@ describe('schemas', () => {
   it('rejects a digit above 9 and wrong array lengths', () => {
     expect(SubmitReqSchema.safeParse({ ...validSubmit, digits: [2, 5, 7, 10] }).success).toBe(false)
     expect(SubmitReqSchema.safeParse({ ...validSubmit, digits: [2, 5, 7] }).success).toBe(false)
+    expect(SubmitReqSchema.safeParse({ ...validSubmit, digits: [2, 5, 7, 2] }).success).toBe(false) // digits must differ
   })
   it('rejects unknown level and out-of-range seat', () => {
     expect(SubmitReqSchema.safeParse({ ...validSubmit, level: 'ม.7' }).success).toBe(false)

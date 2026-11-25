@@ -111,3 +111,42 @@ describe('a typo must never flip the meaning', () => {
     expect([...detectTypes('วิสามนยนาม')]).toEqual(['proper']) // the same slip in the short type box is forgiven
   })
 })
+
+describe('a bare descriptive word is a reason, never the noun type', () => {
+  it('gibberish in the type box + "ทั่วไป" as the reason earns only the reason half', () => {
+    const g = gradeWord(4, { word: 'กฟหกฟ', reason: 'ทั่วไป' }, { reveal: false })
+    expect(g.typeOk).toBe(false)
+    expect(g.reasonOk).toBe(true)
+    expect(g.points).toBe(0.5)
+  })
+  it('the same goes for the other descriptive stems, in either box', () => {
+    for (const w of ['สามัญ', 'ไม่เจาะจง', 'ไม่เฉพาะ']) {
+      expect(gradeWord(4, { word: 'asdf', reason: w }, { reveal: false }).typeOk).toBe(false)
+      expect(gradeWord(4, { word: w, reason: 'asdf' }, { reveal: false }).typeOk).toBe(true) // in the type box it may name the type
+    }
+  })
+  it('a formal name written in the reason box still counts (boxes swapped / written together)', () => {
+    expect(gradeWord(4, { word: '', reason: 'เป็นคำนามสามัญ เพราะเรียกทั่วไป' }, { reveal: false }).points).toBe(1)
+    expect(gradeWord(4, { word: 'เพราะทั่วไป', reason: 'สามานยนาม' }, { reveal: false }).points).toBe(1)
+  })
+})
+
+describe('review fixes', () => {
+  const pts = (d: number, word: string, reason: string) => gradeWord(d, { word, reason }, { reveal: false }).points
+  it('one type in each box is hedging: the type box answer is the one that counts', () => {
+    expect(pts(0, 'วิสามานยนาม', 'สามานยนาม')).toBe(0)
+    expect(pts(2, 'สามานยนาม', 'วิสามานยนาม')).toBe(0)
+    expect(pts(5, 'สามานยนาม', 'เป็นวิสามานยนาม เพราะเป็นชื่อจังหวัด')).toBe(0.5)
+  })
+  it('restating the whole given phrase (Thai or Arabic digit) is not a reason', () => {
+    expect(pts(3, 'ลักษณนาม', 'หนังสือ 1 เล่ม')).toBe(0.5)
+    expect(pts(3, 'ลักษณนาม', 'หนังสือ ๑ เล่ม')).toBe(0.5)
+  })
+  it('"ไม่มีชื่อเฉพาะ" explains a common noun', () => {
+    expect(pts(0, 'คำนามสามัญ', 'ไม่มีชื่อเฉพาะ')).toBe(1)
+  })
+  it('"คนทั่วไปรู้จัก" does not contradict a proper noun, but calling the word general does', () => {
+    expect(pts(2, 'วิสามานยนาม', 'เป็นกวีที่คนทั่วไปรู้จัก')).toBe(1)
+    expect(pts(5, 'วิสามานยนาม', 'เป็นชื่อจังหวัด ใช้เรียกทั่วไป')).toBe(0.5)
+  })
+})

@@ -48,6 +48,18 @@ describe('DigitBoxes', () => {
     expect((digitInputs()[0]!.element as HTMLInputElement).value).toBe('๓')
   })
 
+  it('refuses a digit that is already in another box and says why', async () => {
+    const { w, digitInputs, type, state } = mountBoxes()
+    await type(0, '5')
+    await type(1, '5')
+    expect(state().digits[1]).toBe('')
+    expect((digitInputs()[1]!.element as HTMLInputElement).value).toBe('')
+    expect(w.text()).toContain('เลขซ้ำกันไม่ได้')
+    await type(1, '6')
+    expect(state().digits[1]).toBe('6')
+    expect(w.text()).not.toContain('เลขซ้ำกันไม่ได้')
+  })
+
   it('ignores non-digits', async () => {
     const { type, state } = mountBoxes()
     await type(0, 'ก')

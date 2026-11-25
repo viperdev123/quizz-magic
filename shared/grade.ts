@@ -1,4 +1,4 @@
-import { drawnNounFor } from './drawn'
+import { drawnNounFor, toArabicDigits } from './drawn'
 import { normalizeName } from './normalize'
 import { DIGIT_RUBRIC, NOUN_TYPES, type NounTypeKey } from './rubric'
 
@@ -76,17 +76,23 @@ const ALIASES = TYPE_KEYS.flatMap((key) => COMPILED[key].aliases.map((alias) => 
   (a, b) => b.alias.length - a.alias.length,
 )
 
+// Descriptive stems like "ทั่วไป" or "ไม่เจาะจง" are reasons, not type names. They may name the type only in the
+// type box itself; when the answer is read from the other box (or both boxes together) only formal names count.
+const isFormalName = (alias: string) => /นาม|ลักษณ|อาการ|[a-z]/.test(alias) || NAME_ONLY.includes(alias)
+const FORMAL_ALIASES = ALIASES.filter((a) => isFormalName(a.alias))
+
 interface TypeReading {
   types: Set<NounTypeKey>
   /** What is left of the answer once the type names are taken out: it may hold the reason too. */
   residue: string
 }
 
-function readType(answer: string): TypeReading {
+function readType(answer: string, formalOnly = false): TypeReading {
+  const aliases = formalOnly ? FORMAL_ALIASES : ALIASES
   let rest = normalizeForMatch(answer)
   const types = new Set<NounTypeKey>()
   let consumed = false
-  for (const { key, alias } of ALIASES) {
+  for (const { key, alias } of aliases) {
     if (!rest.includes(alias)) continue
     if (containsUnnegated(rest, alias)) types.add(key)
     rest = rest.split(alias).join('§') // consume it so a longer name never also counts as its own substring
@@ -95,7 +101,7 @@ function readType(answer: string): TypeReading {
   if (!consumed && rest.length > 0 && rest.length <= MAX_TYPO_TEXT) {
     // tolerate slips of the keyboard (a missing, extra or wrong letter) anywhere in the answer
     const near: { key: NounTypeKey; len: number; dist: number }[] = []
-    for (const { key, alias } of ALIASES) {
+    for (const { key, alias } of aliases) {
       // a typo must never bridge a negation: "เจาะจง" (specific) is one letter from "ไม่เจาะจง" (not specific)
       if (alias.includes(NEG)) continue
       const limit = alias.length >= 9 ? 2 : alias.length >= 6 ? 1 : 0
@@ -132,8 +138,11 @@ export function reasonHasKeywords(
   const expected = Array.isArray(types) ? types : [types]
   const primary = COMPILED[expected[0]!]
   let text = normalizeForMatch(reason)
-  const noun = normalizeForMatch(drawnNoun)
-  if (noun) text = text.split(noun).join('')
+  // restating the given word is not a reason, whether written with Thai or Arabic digits ("หนังสือ 1 เล่ม")
+  for (const form of [drawnNoun, toArabicDigits(drawnNoun)]) {
+    const noun = normalizeForMatch(form)
+    if (noun) text = text.split(noun).join('')
+  }
   for (const name of NAME_ONLY) text = text.split(name).join('')
   if (!text) return false
 
@@ -175,15 +184,24 @@ export function gradeWord(digit: number, answer: { word: string; reason: string 
   const type = NOUN_TYPES[rubric.type]
   const noun = drawnNounFor(digit)
 
-  const read = (typeText: string, reasonText: string) => {
-    const t = readType(typeText)
+  // if the type box names a type, that is the student's answer: another reading may only agree with it, never swap it
+  // for a different type found in the reason box (one type in each box would otherwise always win half a point)
+  const inTypeBox = readType(answer.word).types
+  const agrees = (found: Set<NounTypeKey>) =>
+    inTypeBox.size === 0 || (found.size === inTypeBox.size && [...found].every((k) => inTypeBox.has(k)))
+
+  const read = (typeText: string, reasonText: string, formalOnly = false) => {
+    const t = readType(typeText, formalOnly)
     const [only] = t.types
-    const typeOk = t.types.size === 1 && only !== undefined && expected.includes(only)
+    const typeOk = t.types.size === 1 && only !== undefined && expected.includes(only) && agrees(t.types)
     const reasonOk = reasonHasKeywords(`${reasonText} ${t.residue}`, expected, rubric.extraKeywords, noun)
     return { typeOk, reasonOk, points: (typeOk ? 0.5 : 0) + (reasonOk ? 0.5 : 0) }
   }
+  // a type box left empty is no contradiction, so a descriptive stem in the reason may stand in for the type;
+  // but if something else was written there (even nonsense) the type box was answered and must hold the type
+  const filled = answer.word.trim() !== ''
   const both = `${answer.word} ${answer.reason}`
-  const candidates = [read(answer.word, answer.reason), read(answer.reason, answer.word), read(both, both)]
+  const candidates = [read(answer.word, answer.reason), read(answer.reason, answer.word, filled), read(both, both, filled)]
   const best = candidates.reduce((a, b) => (b.points > a.points ? b : a))
   const { typeOk, reasonOk, points } = best
 

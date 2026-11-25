@@ -10,6 +10,9 @@ const props = defineProps<{ digits: string[]; invalid?: boolean }>()
 const emit = defineEmits<{ 'update:digits': [string[]] }>()
 
 const digitEls = ref<(HTMLInputElement | null)[]>([])
+const dupMessage = ref('')
+const DUP_TEXT = 'เลขซ้ำกันไม่ได้นะ เลือกเลขที่ยังไม่ได้ใช้'
+const usedElsewhere = (i: number, d: string) => props.digits.some((x, k) => k !== i && x === d)
 
 function setDigit(i: number, v: string) {
   const next = [...props.digits]
@@ -27,6 +30,13 @@ const onlyDigits = (s: string) => toArabicDigits(s).replace(/\D/g, '')
 function onInput(i: number, e: Event) {
   const el = e.target as HTMLInputElement
   const d = onlyDigits(el.value).slice(-1)
+  if (d && usedElsewhere(i, d)) {
+    el.value = ''
+    setDigit(i, '')
+    dupMessage.value = DUP_TEXT
+    return
+  }
+  dupMessage.value = ''
   el.value = toThaiDigits(d) // keep what is shown in Thai numerals
   setDigit(i, d)
   if (d && i < 3) void focusBox(i + 1)
@@ -53,12 +63,19 @@ function onPaste(i: number, e: ClipboardEvent) {
   const next = [...props.digits]
   const start = pasted.length >= 4 ? 0 : i
   for (let k = 0; k < pasted.length && start + k < 4; k++) next[start + k] = pasted[k]!
+  const filled = next.filter(Boolean)
+  if (new Set(filled).size !== filled.length) {
+    dupMessage.value = DUP_TEXT
+    return
+  }
+  dupMessage.value = ''
   emit('update:digits', next)
   void focusBox(Math.min(start + pasted.length, 3))
 }
 </script>
 
 <template>
+  <div>
   <div class="grid grid-cols-4 gap-3 sm:gap-6">
     <div v-for="i in 4" :key="i" class="flex min-w-0 flex-col items-center gap-3">
       <input
@@ -91,5 +108,7 @@ function onPaste(i: number, e: ClipboardEvent) {
         <template v-else>คำนามที่สุ่มได้</template>
       </p>
     </div>
+  </div>
+  <p v-if="dupMessage" role="alert" class="mt-3 text-center font-semibold text-bad">{{ dupMessage }}</p>
   </div>
 </template>

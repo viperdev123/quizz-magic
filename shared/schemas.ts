@@ -16,7 +16,9 @@ export const SubmitReqSchema = z.object({
   level: LevelSchema,
   room,
   studentNo,
-  digits: z.tuple([digit, digit, digit, digit]),
+  digits: z
+    .tuple([digit, digit, digit, digit])
+    .refine((d) => new Set(d).size === 4, 'digits must be different'),
   /** Deprecated: ignored. The server derives the noun from each digit (shared/drawn.ts). */
   drawnNouns: z.tuple([noun, noun, noun, noun]).optional(),
   words: z.tuple([wordItem, wordItem, wordItem, wordItem]),
