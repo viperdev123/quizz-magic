@@ -8,7 +8,7 @@ import { assertEnv, env, sweepTestUsers } from './env'
 
 // A seat that real students will never use; the suite refuses to run if it is already taken
 // so it can never touch real data, and removes only its own rows afterwards.
-const SEAT = { level: 'ป.1', room: 30, student_no: 99 }
+const SEAT = { level: 'ม.1', room: 30, student_no: 99 }
 const NAME = 'ผู้ทดสอบ ระบบ'
 const WORDS = [
   { word: 'แมว', reason: 'สัตว์' },
@@ -86,7 +86,7 @@ beforeAll(async () => {
   await sweepTestUsers(admin)
   anon = createClient(env.url, env.anonKey, opts)
   const { data } = await admin.from('submissions').select('id').match(SEAT).maybeSingle()
-  if (data) throw new Error('Test seat ป.1/30/99 already exists - refusing to run (would delete data)')
+  if (data) throw new Error('Test seat ม.1/30/99 already exists - refusing to run (would delete data)')
   nonTeacher = (await tempUser('student', false)).client
   const t = await tempUser('teacher', true)
   teacher = t.client
@@ -205,18 +205,17 @@ describe('submit_worksheet: submit + grade in one transaction, one attempt', () 
     await admin.rpc('submit_worksheet', rpcArgs(NAME, { reason_ok: [true, true, true, false] }))
     expect(Number((await gradeOf((await seatId())!))!.total)).toBe(3.5)
   })
-  it('the same student cannot submit again: locked, nothing changes (rule 2)', async () => {
+  it('submitting again replaces the answers and the grade; a different name replaces the name', async () => {
     await resetSeat()
     await admin.rpc('submit_worksheet', rpcArgs(NAME))
-    const changed = WORDS.map((w) => ({ ...w, reason: 'แก้ไขแล้ว' }))
-    expect((await admin.rpc('submit_worksheet', rpcArgs('  ผู้ทดสอบ   ระบบ ', { words: changed, type_ok: F, reason_ok: F }))).data).toBe('locked')
     const id = (await seatId())!
-    const { data } = await admin.from('submissions').select('words').eq('id', id).single()
-    expect((data as { words: typeof WORDS }).words[0]!.reason).toBe(WORDS[0]!.reason)
-    expect(Number((await gradeOf(id))!.total)).toBe(4) // the first score stands
-  })
-  it('a different name on the same seat is refused, before anything about the grade is revealed (rule 3)', async () => {
-    expect((await admin.rpc('submit_worksheet', rpcArgs('คนอื่น ที่ไม่ใช่'))).data).toBe('mismatch')
+    const changed = WORDS.map((w) => ({ ...w, reason: 'แก้ไขแล้ว' }))
+    expect((await admin.rpc('submit_worksheet', rpcArgs('ชื่อใหม่ ทั้งหมด', { words: changed, type_ok: F, reason_ok: F }))).data).toBe('ok')
+    expect(await seatId()).toBe(id) // same row
+    const { data } = await admin.from('submissions').select('words, student_name').eq('id', id).single()
+    expect((data as { words: typeof WORDS }).words[0]!.reason).toBe('แก้ไขแล้ว')
+    expect((data as { student_name: string }).student_name).toBe('ชื่อใหม่ ทั้งหมด')
+    expect(Number((await gradeOf(id))!.total)).toBe(0)
   })
   it('an old submission that was never graded can still be replaced, and is graded (rule 4, legacy rows)', async () => {
     await resetSeat()
@@ -254,7 +253,7 @@ describe('the real handlers against the real database (grader + store)', () => {
     { word: 'สามานยนาม', reason: 'เป็นชื่อเรียกทั่วไป' },
   ]
 
-  it('submit -> instant score -> locked on a second try -> same score when looked up', async () => {
+  it('submit -> instant score -> a second try is re-graded -> the new score when looked up', async () => {
     const stores = createStores(env.url, env.serviceKey)
     await resetSeat()
 
@@ -265,16 +264,16 @@ describe('the real handlers against the real database (grader + store)', () => {
     const mixed = [perfect[0]!, perfect[1]!, { word: 'อาการนาม', reason: 'ไม่รู้' }, { word: 'อาการนาม', reason: 'มีคำว่าการนำหน้า' }]
     const first = await handleSubmit(submitBody(mixed), guards, stores.submit)
     expect(first.status).toBe(200)
-    const result = (first.body as { result: { total: number; items: { points: number }[] } }).result
+    const result = (first.body as { result: { total: number; items: { points: number; comment: string | null }[] } }).result
     expect(result.total).toBe(2) // 1 + 1 + 0 + 0 (word 3: wrong type + no reason; word 4: the การ trap)
     expect(result.items.map((i) => i.points)).toEqual([1, 1, 0, 0])
 
-    const second = await handleSubmit(submitBody(perfect), guards, stores.submit) // trying again for a better score
-    expect(second.body).toMatchObject({ ok: false, code: 'LOCKED' })
+    expect(result.items.every((i) => !i.comment || i.points === 1)).toBe(true) // no hints on wrong words
 
+    const second = await handleSubmit(submitBody(perfect, 'ชื่อใหม่ ที่แก้'), guards, stores.submit) // trying again
+    expect(second.status).toBe(200)
     const looked = await handleScore(scoreBody, guards, stores.score)
-    expect(looked.body).toMatchObject({ status: 'graded', total: 2 })
-    expect((looked.body as unknown as { items: unknown }).items).toEqual(result.items)
+    expect(looked.body).toMatchObject({ status: 'graded', name: 'ชื่อใหม่ ที่แก้', total: 4 })
   })
 
   it('an old ungraded submission shows as waiting', async () => {
@@ -282,14 +281,5 @@ describe('the real handlers against the real database (grader + store)', () => {
     await resetSeat()
     await admin.from('submissions').insert(legacySubmission(NAME))
     expect((await handleScore(scoreBody, guards, stores.score)).body).toMatchObject({ status: 'waiting', name: NAME })
-  })
-
-  it('a wrong name is refused and never sees a score', async () => {
-    const stores = createStores(env.url, env.serviceKey)
-    await resetSeat()
-    await handleSubmit(submitBody(perfect), guards, stores.submit)
-    const res = await handleSubmit(submitBody(perfect, 'คนอื่น ที่ไม่ใช่'), guards, stores.submit)
-    expect(res.body).toMatchObject({ ok: false, code: 'MISMATCH' })
-    expect(res.body).not.toHaveProperty('result')
   })
 })

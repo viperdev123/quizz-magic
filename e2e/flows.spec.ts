@@ -33,9 +33,9 @@ async function fillSeat(page: Page) {
   await page.getByLabel('ห้อง', { exact: true }).fill(String(SEAT.room))
   await page.getByLabel('เลขที่', { exact: true }).fill(String(SEAT.student_no))
 }
-async function submitWorksheet(page: Page) {
+async function submitWorksheet(page: Page, name = NAME) {
   await page.goto('/submit')
-  await page.getByLabel('ชื่อ-สกุล').fill(NAME)
+  await page.getByLabel('ชื่อ-สกุล').fill(name)
   await fillSeat(page)
   // type the four digits: each box moves on to the next by itself
   await page.getByLabel(/^เลขที่ได้ ช่องที่/).first().click()
@@ -69,8 +69,8 @@ test('flow 1: the student submits and sees the score straight away', async ({ pa
   await expect(page.getByRole('heading', { name: 'ส่งคำตอบเรียบร้อย!' })).toBeVisible()
   await expect(page.getByText('๓ / ๔')).toBeVisible()
   await expect(page.getByText('เยี่ยมมาก! เรียนรู้ต่อไปนะ')).toBeVisible()
-  // the wrong answer (word 4) is marked and the key is shown: it is the only attempt
-  await expect(page.getByText(/ชนิดที่ถูกคือ คำนามสามัญ/)).toBeVisible()
+  // the wrong answer (word 4) is marked, but no hint or key is given for it
+  await expect(page.getByText(/ชนิดที่ถูกคือ/)).toHaveCount(0)
   await expect(page.getByText('✓ ชนิดคำนาม (๐.๕)').first()).toBeVisible()
   await expect(page.getByText('✗ ชนิดคำนาม (๐.๕)')).toBeVisible()
 
@@ -85,12 +85,17 @@ test('flow 1: the student submits and sees the score straight away', async ({ pa
   expect((g.data as { graded_by: string | null }).graded_by).toBeNull() // graded by the server, not a teacher
 })
 
-test('one attempt only: submitting again is refused and the score stands', async ({ page }) => {
+test('submitting again is allowed: same seat, new name replaces the old one, score is re-graded', async ({ page }) => {
   await submitWorksheet(page)
-  await expect(page.getByText('ส่งงานนี้ไปแล้ว ส่งซ้ำไม่ได้')).toBeVisible()
-  const sub = await t.admin.from('submissions').select('id').match(SEAT).single()
-  const g = await t.admin.from('grades').select('total').eq('submission_id', (sub.data as { id: string }).id).single()
+  await expect(page.getByRole('heading', { name: 'ส่งคำตอบเรียบร้อย!' })).toBeVisible()
+  await submitWorksheet(page, 'นักเรียน ชื่อใหม่')
+  await expect(page.getByRole('heading', { name: 'ส่งคำตอบเรียบร้อย!' })).toBeVisible()
+  const sub = await t.admin.from('submissions').select('id, student_name').match(SEAT)
+  expect(sub.data).toHaveLength(1) // still one row for the seat
+  expect((sub.data![0] as { student_name: string }).student_name).toBe('นักเรียน ชื่อใหม่')
+  const g = await t.admin.from('grades').select('total').eq('submission_id', (sub.data![0] as { id: string }).id).single()
   expect(Number((g.data as { total: number }).total)).toBe(3)
+  await submitWorksheet(page) // restore the original name for the next flows
 })
 
 test('flow 2: the teacher sees the automatic grade and can correct a half point', async ({ page }) => {

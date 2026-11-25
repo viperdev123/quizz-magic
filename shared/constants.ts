@@ -1,7 +1,4 @@
-export const LEVELS = [
-  'ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6',
-  'ม.1', 'ม.2', 'ม.3', 'ม.4', 'ม.5', 'ม.6',
-] as const
+export const LEVELS = ['ม.1'] as const
 export type Level = (typeof LEVELS)[number]
 
 export const LIMITS = {

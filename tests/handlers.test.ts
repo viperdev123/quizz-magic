@@ -5,7 +5,6 @@ import {
   type Guards,
   type ScoreStore,
   type StoredSubmission,
-  type SubmitStore,
 } from '../functions/_lib/handlers'
 import { checkRateLimit, type KvLike } from '../functions/_lib/ratelimit'
 import { verifyTurnstile } from '../functions/_lib/turnstile'
@@ -78,7 +77,7 @@ describe('POST /api/submit', () => {
     const { comments } = submit.mock.calls[0]![0] as { comments: string[] }
     expect(comments).toHaveLength(4)
     expect(comments[0]).toContain('ถูกต้อง')
-    expect(comments[3]).toContain('คำนามสามัญ') // after a wrong answer the key is revealed (one attempt only)
+    expect(comments[3]).toBe('') // no hint and no answer key for a wrong word (students may try again)
   })
 
   it('ignores a score or marks sent by the client', async () => {
@@ -101,25 +100,15 @@ describe('POST /api/submit', () => {
     expect(res.status).toBe(200)
   })
 
-  it('a second submission is locked: one attempt only (rule 2)', async () => {
-    const store: SubmitStore = { submit: async () => 'locked' }
-    const res = await handleSubmit(submitBody, okGuards, store)
-    expect(res.status).toBe(409)
-    expect(res.body).toEqual({ ok: false, code: 'LOCKED', message: MESSAGES.locked })
-    expect(MESSAGES.locked).toContain('ส่งซ้ำไม่ได้')
-  })
-
-  it('does not reveal a score when the seat is locked or the name does not match', async () => {
-    for (const outcome of ['locked', 'mismatch'] as const) {
-      const res = await handleSubmit(submitBody, okGuards, { submit: async () => outcome })
-      expect(res.body).not.toHaveProperty('result')
-    }
-  })
-
-  it('rejects a different name on the same seat (rule 3)', async () => {
-    const store: SubmitStore = { submit: async () => 'mismatch' }
-    const res = await handleSubmit(submitBody, okGuards, store)
-    expect(res.body).toEqual({ ok: false, code: 'MISMATCH', message: MESSAGES.mismatch })
+  it('does not send a hint or the answer key for a wrong word, but keeps praise for a right one', async () => {
+    const submit = vi.fn().mockResolvedValue('ok')
+    const res = await handleSubmit(submitBody, okGuards, { submit })
+    const sent = submit.mock.calls[0]![0] as { comments: string[]; typeOk: boolean[]; reasonOk: boolean[] }
+    sent.comments.forEach((c, i) => {
+      if (sent.typeOk[i] && sent.reasonOk[i]) expect(c).toBeTruthy()
+      else expect(c).toBe('')
+    })
+    expect(JSON.stringify(res.body)).not.toContain('ชนิดที่ถูกคือ')
   })
 
   it('rejects invalid input before touching Turnstile or the DB', async () => {
@@ -294,7 +283,7 @@ describe('serve() never leaks platform errors', () => {
     const { serve } = await import('../functions/_lib/serve')
     const kv = { get: async () => null, put: async () => undefined }
     const res = await serve(
-      new Request('https://example.test/api/score', { method: 'POST', body: JSON.stringify({ level: 'ป.1', room: 1, studentNo: 1, turnstileToken: 't' }) }),
+      new Request('https://example.test/api/score', { method: 'POST', body: JSON.stringify({ level: 'ม.1', room: 1, studentNo: 1, turnstileToken: 't' }) }),
       { RATE_LIMIT: kv, SUPABASE_URL: '', SUPABASE_SERVICE_ROLE_KEY: '', TURNSTILE_SECRET_KEY: '' } as never,
       'score',
     )

@@ -5,8 +5,8 @@ import { assertEnv, env, sweepTestUsers } from './env'
 
 // Matrix: {anon, signed-in non-teacher} x {teachers, submissions, grades} x {select, insert, update, delete}.
 // Every attempt must fail or affect nothing, and the database must be byte-for-byte unchanged afterwards.
-const SEATS = { a: { level: 'ป.1', room: 30, student_no: 98 }, b: { level: 'ป.1', room: 30, student_no: 97 } }
-const NEW_SEAT = { level: 'ป.1', room: 30, student_no: 96 }
+const SEATS = { a: { level: 'ม.1', room: 30, student_no: 98 }, b: { level: 'ม.1', room: 30, student_no: 97 } }
+const NEW_SEAT = { level: 'ม.1', room: 30, student_no: 96 }
 const WORDS = [1, 2, 3, 4].map((n) => ({ word: `w${n}`, reason: `r${n}` }))
 const sub = (seat: typeof NEW_SEAT) => ({
   ...seat,
@@ -26,7 +26,7 @@ let idB = ''
 let teacherId = ''
 
 async function snapshot() {
-  const s = await admin.from('submissions').select('*').eq('level', 'ป.1').eq('room', 30).order('student_no')
+  const s = await admin.from('submissions').select('*').eq('level', 'ม.1').eq('room', 30).order('student_no')
   const g = await admin.from('grades').select('*').in('submission_id', [idA, idB]).order('submission_id')
   const t = await admin.from('teachers').select('*').order('user_id')
   return JSON.stringify({ s: s.data, g: g.data, t: t.data })
@@ -49,7 +49,7 @@ async function tempUser(isTeacher: boolean) {
 }
 
 async function cleanup() {
-  await admin.from('submissions').delete().eq('level', 'ป.1').eq('room', 30).in('student_no', [96, 97, 98])
+  await admin.from('submissions').delete().eq('level', 'ม.1').eq('room', 30).in('student_no', [96, 97, 98])
   for (const id of userIds) await admin.auth.admin.deleteUser(id)
 }
 
@@ -57,8 +57,8 @@ beforeAll(async () => {
   assertEnv()
   admin = createClient(env.url, env.serviceKey, opts)
   await sweepTestUsers(admin)
-  const taken = await admin.from('submissions').select('id').eq('level', 'ป.1').eq('room', 30).in('student_no', [96, 97, 98])
-  if (taken.data?.length) throw new Error('Matrix test seats ป.1/30/96-98 already used - refusing to run')
+  const taken = await admin.from('submissions').select('id').eq('level', 'ม.1').eq('room', 30).in('student_no', [96, 97, 98])
+  if (taken.data?.length) throw new Error('Matrix test seats ม.1/30/96-98 already used - refusing to run')
 
   const a = await admin.from('submissions').insert(sub(SEATS.a)).select('id').single()
   const b = await admin.from('submissions').insert(sub(SEATS.b)).select('id').single()
@@ -109,7 +109,7 @@ for (const role of ['anon', 'signed-in non-teacher']) {
     it('cannot call the submit function or become a teacher', async () => {
       const c = clients[role]!
       const rpc = await c.rpc('submit_worksheet', {
-        p_level: 'ป.1', p_room: 30, p_student_no: 96, p_name: 'x', p_name_norm: 'x',
+        p_level: 'ม.1', p_room: 30, p_student_no: 96, p_name: 'x', p_name_norm: 'x',
         p_digits: [1, 2, 3, 4], p_nouns: ['a', 'b', 'c', 'd'], p_words: WORDS,
         p_type_ok: [true, true, true, true], p_reason_ok: [true, true, true, true], p_comments: ['', '', '', ''], p_note: null,
       })
@@ -121,7 +121,7 @@ for (const role of ['anon', 'signed-in non-teacher']) {
 
 describe('database is unchanged after the whole matrix', () => {
   it('no stray rows were created', async () => {
-    const { data } = await admin.from('submissions').select('student_no').eq('level', 'ป.1').eq('room', 30).in('student_no', [96, 97, 98])
+    const { data } = await admin.from('submissions').select('student_no').eq('level', 'ม.1').eq('room', 30).in('student_no', [96, 97, 98])
     expect((data ?? []).map((r) => (r as { student_no: number }).student_no).sort()).toEqual([97, 98])
   })
 })

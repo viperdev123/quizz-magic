@@ -139,12 +139,12 @@ export async function handleSubmit(
 
   try {
     // Grade on the server (the client is never trusted with the score).
-    const graded = gradeWorksheet(req.digits, req.words, { reveal: true })
+    const graded = gradeWorksheet(req.digits, req.words, { reveal: false })
     // never trust client text: the stored noun is always the one tied to the digit
     const drawnNouns = req.digits.map((d) => drawnNounFor(d))
     const typeOk = graded.items.map((i) => i.typeOk)
     const reasonOk = graded.items.map((i) => i.reasonOk)
-    const comments = graded.items.map((i) => i.feedback)
+    const comments = graded.items.map((i) => (i.typeOk && i.reasonOk ? i.feedback : ''))
 
     const outcome = await store.submit({
       level: req.level,

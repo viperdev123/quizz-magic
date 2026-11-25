@@ -1,4 +1,3 @@
-import { LEVELS } from '@shared/constants'
 import { toArabicDigits } from '@shared/drawn'
 import { normalizeName } from '@shared/normalize'
 import { thaiCollator } from './format'
@@ -36,11 +35,11 @@ export interface Filters {
   sort: 'seat' | 'name'
 }
 
-const levelIndex = (l: string) => LEVELS.indexOf(l as (typeof LEVELS)[number])
+const levelCmp = (a: string, b: string) => a.localeCompare(b, 'th')
 
 export function sortRows(rows: SubmissionRow[], sort: Filters['sort']): SubmissionRow[] {
   const bySeat = (a: SubmissionRow, b: SubmissionRow) =>
-    levelIndex(a.level) - levelIndex(b.level) || a.room - b.room || a.student_no - b.student_no
+    levelCmp(a.level, b.level) || a.room - b.room || a.student_no - b.student_no
   return [...rows].sort(
     sort === 'name' ? (a, b) => thaiCollator.compare(a.student_name, b.student_name) || bySeat(a, b) : bySeat,
   )
